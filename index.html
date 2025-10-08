@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Durak Lounge</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body data-page="home">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="index.html">Durak Lounge</a>
+        <nav class="header-nav">
+          <a href="setup.html?mode=solo">Solo</a>
+          <a href="setup.html?mode=multiplayer">Mit Freunden</a>
+          <a href="#tisch">Tischgefühl</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page home">
+      <section class="hero">
+        <div class="hero-copy">
+          <span class="hero-eyebrow">Willkommen in der Lounge</span>
+          <h1>Setz dich an den Durak-Tisch</h1>
+          <p>
+            Entscheide dich für eine ruhige Solopartie mit drei virtuellen Gästen
+            oder lade Freunde an deinen privaten Vier-Personen-Tisch ein. Jede
+            Partie nutzt eine detaillierte Durak-Mechanik – vom Trumpf bis zum
+            letzten Stich.
+          </p>
+          <div class="hero-actions">
+            <a class="button" href="setup.html?mode=solo">Solo-Tisch decken</a>
+            <a class="button ghost" href="setup.html?mode=multiplayer"
+              >Lobby erstellen</a
+            >
+          </div>
+        </div>
+        <div class="hero-preview" id="tisch">
+          <div class="preview-table">
+            <div class="preview-seat preview-seat-north">Gast</div>
+            <div class="preview-seat preview-seat-east">Gast</div>
+            <div class="preview-seat preview-seat-south">Du</div>
+            <div class="preview-seat preview-seat-west">Gast</div>
+            <div class="preview-center">Durak</div>
+          </div>
+          <span class="preview-caption">Vier Plätze, ein Tisch, echte Spannung.</span>
+        </div>
+      </section>
+
+      <section class="mode-section">
+        <article class="mode-card">
+          <h2>Solo spielen</h2>
+          <p>
+            Triff auf drei entspannte KI-Spieler, die rund um den Tisch sitzen.
+            Die Partie wird lokal gespeichert, damit du jederzeit weiterziehen
+            kannst.
+          </p>
+          <a class="button" href="setup.html?mode=solo">Gegen die KI antreten</a>
+        </article>
+        <article class="mode-card">
+          <h2>Private Lobby</h2>
+          <p>
+            Teile einen Lobby-Code mit Freunden und startet gemeinsam in eine
+            synchrone Vierer-Runde. Perfekt für Spielabende in der Ferne.
+          </p>
+          <a class="button" href="setup.html?mode=multiplayer"
+            >Lobby vorbereiten</a
+          >
+        </article>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <small>Durak Lounge – moderne Kartenabende, die sich wie echte fühlen.</small>
+    </footer>
+
+    <script type="module" src="main.js"></script>
+  </body>
+</html>

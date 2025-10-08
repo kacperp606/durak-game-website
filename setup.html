@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Durak Lounge – Setup</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body data-page="setup">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="index.html">Durak Lounge</a>
+        <nav class="header-nav">
+          <a href="setup.html?mode=solo">Solo</a>
+          <a href="setup.html?mode=multiplayer">Mit Freunden</a>
+          <a href="lobby.html" class="disabled" aria-disabled="true">Lobbys</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page setup">
+      <section class="setup-panel" data-mode="solo">
+        <h1>Solo-Tisch decken</h1>
+        <p>
+          Setze dich einem Dreierteam aus KI-Gegnern entgegen. Jede Karte folgt der
+          klassischen Durak-Regel – du startest mit sechs Karten und einem
+          zufälligen Trumpf.
+        </p>
+        <form id="soloForm" class="form-grid">
+          <label class="field">
+            <span>Dein Name</span>
+            <input type="text" name="player" placeholder="z. B. Lena" required />
+          </label>
+          <div class="field">
+            <span>Sitzplatz</span>
+            <p class="hint">Du spielst an der Südseite – direkt vor deinen Karten.</p>
+          </div>
+          <button class="button" type="submit">Partie starten</button>
+        </form>
+      </section>
+
+      <section class="setup-panel" data-mode="multiplayer">
+        <h1>Private Lobby vorbereiten</h1>
+        <p>
+          Erstelle einen Code für deine Vierer-Runde oder trete einem bestehenden
+          Raum bei. Jede Lobby speichert Spielstand und Spielverlauf.
+        </p>
+        <div class="setup-columns">
+          <form id="createLobbyForm" class="form-card">
+            <h2>Lobby eröffnen</h2>
+            <label class="field">
+              <span>Dein Name</span>
+              <input type="text" name="host" placeholder="z. B. Gastgeber" required />
+            </label>
+            <button class="button" type="submit">Code generieren</button>
+          </form>
+          <form id="joinLobbyForm" class="form-card">
+            <h2>Lobby beitreten</h2>
+            <label class="field">
+              <span>Lobby-Code</span>
+              <input
+                type="text"
+                name="code"
+                placeholder="ABCDE"
+                maxlength="5"
+                pattern="[A-Za-z0-9]{5}"
+                required
+              />
+            </label>
+            <label class="field">
+              <span>Dein Name</span>
+              <input type="text" name="guest" placeholder="z. B. Gast" required />
+            </label>
+            <button class="button" type="submit">Jetzt beitreten</button>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <small>Durak Lounge – sichere Tische für dich und deine Freunde.</small>
+    </footer>
+
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
