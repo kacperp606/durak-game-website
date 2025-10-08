@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Durak Lounge – Lobby</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body data-page="lobby">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="index.html">Durak Lounge</a>
+        <nav class="header-nav">
+          <a href="setup.html?mode=solo">Solo</a>
+          <a href="setup.html?mode=multiplayer">Mit Freunden</a>
+          <a href="lobby.html" class="current">Lobby</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page lobby">
+      <section class="lobby-panel">
+        <header class="panel-head">
+          <div>
+            <span class="panel-eyebrow">Privater Raum</span>
+            <h1>Vierer-Lobby</h1>
+          </div>
+          <div class="code-block">
+            <span>Code</span>
+            <strong id="lobbyCode">-----</strong>
+          </div>
+        </header>
+
+        <p id="lobbyMessage" class="lobby-message">
+          Lobby wird geladen …
+        </p>
+
+        <div class="seat-grid" id="lobbySeats"></div>
+
+        <div class="lobby-actions">
+          <button id="startGameButton" class="button">Spiel beginnen</button>
+          <button id="leaveLobbyButton" class="button ghost">
+            Lobby verlassen
+          </button>
+        </div>
+
+        <section class="lobby-log">
+          <h2>Letzte Aktionen</h2>
+          <ul id="lobbyLog"></ul>
+        </section>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <small>Teile deinen Code nur mit deinen Mitspielern.</small>
+    </footer>
+
+    <script type="module" src="main.js"></script>
+  </body>
+</html>

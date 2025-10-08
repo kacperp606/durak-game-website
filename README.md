@@ -1,27 +1,29 @@
-# Durak Arena
+# Durak Lounge
 
-Eine moderne, komplett clientseitige Umsetzung des Kartenspiels **Durak** – inklusive Solo-Modus gegen eine KI sowie einer lokalen Mehrspieler-Lobby mit Einladungscode.
+Eine moderne, komplett clientseitige Umsetzung des Kartenspiels **Durak** – jetzt mit einem vierseitigen Spieltisch, separaten Seiten für Lobby, Setup und Spiel sowie einer warmen Lounge-Atmosphäre.
 
-## Features
+## Highlights
 
-- 🌐 Startseite mit klarer Modus-Wahl (Solo oder Multiplayer).
-- 🧠 Solo-Duell gegen eine adaptive KI, die Angriffe und Verteidigungen automatisiert.
-- 🤝 Lobby-System mit generierten Codes, das in mehreren Browser-Tabs über `localStorage` synchronisiert wird.
-- 🃏 Vollständige Spielmechanik für Durak (36er Kartendeck, Trumpf, Angriffs-/Verteidigungsphasen, Nachziehen, Siegbedingungen).
-- 💾 Automatisches Wiederherstellen einer laufenden Lobby beim erneuten Öffnen des Tabs.
-- 🎨 Cleanes, modernes Design mit Glas-Effekt und responsivem Layout.
-- 📜 Live-Spielverlauf mit Zeitstempeln, der Aktionen und Rundenergebnisse transparent macht.
+- 🏠 Getrennte Seiten für Start, Setup, Lobby und Spieltisch sorgen für einen klaren Ablauf.
+- 🧠 Solo-Modus mit drei KI-Gegnern, die vollständig nach Durak-Regeln agieren.
+- 🤝 Private Vier-Spieler-Lobby mit Einladungs-Code und Echtzeit-Synchronisation via `localStorage`.
+- 🃏 Vollständige Durak-Mechanik: Trumpf, Angriffs-/Verteidigungsphasen, Nachziehen, Log und Rundenabschluss.
+- 🪑 Tischlayout mit vier Sitzpositionen (Nord, Ost, Süd, West) und realistischer Kartenpräsentation.
+- 📜 Rundenprotokoll mit Zeitstempeln, das im Spiel und in der Lobby sichtbar bleibt.
 
-## Projektstruktur
+## Struktur
 
 ```
-├── index.html      # Einstiegspunkt der Anwendung
-├── main.js         # Spiel- und Lobby-Logik, UI-Rendering
-├── styles.css      # Globales Styling
+├── index.html      # Startseite mit Tischauswahl
+├── setup.html      # Solo-Setup bzw. Lobby-Erstellung/-Beitritt
+├── lobby.html      # Vierer-Lobby mit Sitzplätzen und Log
+├── table.html      # Spieltisch mit Karten und Log
+├── main.js         # Spiel-/Lobbylogik + Page-spezifische Controller
+├── styles.css      # Gemeinsames Styling im Lounge-Look
 └── README.md
 ```
 
-## Entwicklung & Nutzung
+## Nutzung
 
 1. Repository klonen und in das Projektverzeichnis wechseln.
 2. Eine lokale Entwicklungsumgebung starten, z. B. mit Python:
@@ -30,16 +32,15 @@ Eine moderne, komplett clientseitige Umsetzung des Kartenspiels **Durak** – in
    python -m http.server 5173
    ```
 
-3. Im Browser `http://localhost:5173` öffnen.
+3. Im Browser die gewünschte Seite öffnen, z. B. `http://localhost:5173/index.html`.
 
-> Hinweis: Alle Funktionen laufen vollständig im Browser. Für Multiplayer muss jede Partei dieselbe Lobby in einem weiteren Tab/Fenster öffnen – die Synchronisation erfolgt über `localStorage`.
+> Hinweis: Für Multiplayer öffnet jede Person die Lobby bzw. den Tisch im eigenen Tab. Die Synchronisierung erfolgt über `localStorage`, daher muss der Code im selben Browser/auf demselben Gerät geteilt werden.
 
-## Multiplayer-Flow
+## Ablauf im Mehrspieler-Modus
 
-1. **Lobby erstellen** und den angezeigten Code teilen.
-2. **Zweiter Spieler** gibt den Code ein und tritt bei.
-3. Sobald beide verbunden sind, startet der Host die Runde. Spielzüge werden automatisch zwischen den geöffneten Tabs synchronisiert.
+1. Auf `setup.html?mode=multiplayer` eine Lobby erstellen und den Code teilen.
+2. Weitere Spieler treten über denselben Link mit dem Code bei. Vier Plätze müssen besetzt sein.
+3. Der Host startet die Runde und alle wechseln automatisch zu `table.html?mode=lobby&code=xxxxx`.
+4. Spielzüge werden zwischen allen offenen Tabs synchron gehalten. Nach einer Runde kann der Host direkt eine Revanche starten.
 
-## Lizenz
-
-Dieses Projekt steht ohne spezielle Lizenzangabe zur Verfügung. Passe es gerne an deine Bedürfnisse an.
+Viel Spaß in der Durak Lounge!

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Durak Lounge – Spieltisch</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body data-page="table">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="index.html">Durak Lounge</a>
+        <nav class="header-nav">
+          <a href="setup.html?mode=solo">Solo</a>
+          <a href="setup.html?mode=multiplayer">Mit Freunden</a>
+          <a href="lobby.html">Lobby</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page table">
+      <div class="game-layout">
+        <section class="table-surface" aria-live="polite">
+          <div class="seat seat-north" data-seat="north">
+            <div class="seat-header">
+              <span class="seat-name"></span>
+              <span class="seat-status"></span>
+            </div>
+            <div class="seat-cards"></div>
+          </div>
+          <div class="seat seat-east" data-seat="east">
+            <div class="seat-header">
+              <span class="seat-name"></span>
+              <span class="seat-status"></span>
+            </div>
+            <div class="seat-cards"></div>
+          </div>
+          <div class="seat seat-south" data-seat="south">
+            <div class="seat-header">
+              <span class="seat-name"></span>
+              <span class="seat-status"></span>
+            </div>
+            <div class="seat-cards" id="playerHand"></div>
+            <div class="seat-actions" id="playerActions"></div>
+          </div>
+          <div class="seat seat-west" data-seat="west">
+            <div class="seat-header">
+              <span class="seat-name"></span>
+              <span class="seat-status"></span>
+            </div>
+            <div class="seat-cards"></div>
+          </div>
+          <div class="table-center">
+            <div class="trump-display">
+              <span>Trumpf</span>
+              <div id="trumpCard" class="trump-card"></div>
+            </div>
+            <div class="table-pairs" id="tablePairs"></div>
+          </div>
+        </section>
+
+        <aside class="table-sidebar">
+          <div class="info-strip">
+            <div>
+              <span>Nachziehstapel</span>
+              <strong id="deckCount">36</strong>
+            </div>
+            <div>
+              <span>Ablagestapel</span>
+              <strong id="discardCount">0</strong>
+            </div>
+          </div>
+          <p id="gameMessage" class="game-message">Der Tisch wird vorbereitet …</p>
+          <div class="log-panel">
+            <h2>Rundennotizen</h2>
+            <ul id="logList"></ul>
+          </div>
+          <div class="end-panel" id="endPanel" hidden>
+            <p id="endMessage"></p>
+            <div class="end-actions">
+              <button id="restartButton" class="button">Revanche</button>
+              <a id="backToLobby" class="button ghost" href="index.html"
+                >Zurück zur Übersicht</a
+              >
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <small>Viel Erfolg – der letzte mit Karten bleibt der Durak.</small>
+    </footer>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+    <script type="module" src="main.js"></script>
+  </body>
+</html>

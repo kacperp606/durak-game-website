@@ -449,162 +449,23 @@ class DurakGame {
   }
 }
 
-const AppState = {
-  view: "home",
-  lobby: null,
-  localPlayerId: null,
-  game: null,
-  mode: "home"
+const STORAGE_KEYS = {
+  SOLO_STATE: "durak_solo_state",
+  SOLO_PLAYER: "durak_solo_player"
 };
 
-const appElement = document.getElementById("app");
+const SEAT_ORDER = ["south", "west", "north", "east"];
+const SUIT_ORDER = ["clubs", "diamonds", "hearts", "spades"];
+const SOLO_AI_NAMES = ["West", "Nord", "Ost"];
 
-function setView(view) {
-  AppState.view = view;
-  render();
-}
-
-function createHomeView() {
-  const container = document.createElement("div");
-  container.className = "home-screen";
-
-  const hero = document.createElement("div");
-  hero.className = "home-hero";
-
-  const eyebrow = document.createElement("span");
-  eyebrow.className = "hero-eyebrow";
-  eyebrow.textContent = "Durak Online";
-
-  const title = document.createElement("h1");
-  title.textContent = "Eine gemütliche Runde Durak";
-
-  const intro = document.createElement("p");
-  intro.textContent =
-    "Wähle deinen Tisch: Trainiere allein gegen die KI oder lade Freunde in deine private Lobby ein.";
-
-  const heroActions = document.createElement("div");
-  heroActions.className = "hero-actions";
-
-  const soloHeroButton = document.createElement("button");
-  soloHeroButton.textContent = "Solo starten";
-  soloHeroButton.addEventListener("click", () => {
-    setView("solo-setup");
-  });
-
-  const multiHeroButton = document.createElement("button");
-  multiHeroButton.className = "secondary";
-  multiHeroButton.textContent = "Mit Freunden spielen";
-  multiHeroButton.addEventListener("click", () => setView("multiplayer"));
-
-  heroActions.appendChild(soloHeroButton);
-  heroActions.appendChild(multiHeroButton);
-
-  hero.appendChild(eyebrow);
-  hero.appendChild(title);
-  hero.appendChild(intro);
-  hero.appendChild(heroActions);
-
-  const modeGrid = document.createElement("div");
-  modeGrid.className = "mode-grid";
-
-  const soloCard = document.createElement("article");
-  soloCard.className = "mode-card";
-  const soloTitle = document.createElement("h2");
-  soloTitle.textContent = "Solo spielen";
-  const soloText = document.createElement("p");
-  soloText.textContent = "Fordere die Aurora-KI heraus und festige deine Taktiken in einer entspannten Atmosphäre.";
-  const soloButton = document.createElement("button");
-  soloButton.textContent = "Solo-Modus öffnen";
-  soloButton.addEventListener("click", () => {
-    setView("solo-setup");
-  });
-  soloCard.appendChild(soloTitle);
-  soloCard.appendChild(soloText);
-  soloCard.appendChild(soloButton);
-
-  const multiCard = document.createElement("article");
-  multiCard.className = "mode-card";
-  const multiTitle = document.createElement("h2");
-  multiTitle.textContent = "Gemeinsam spielen";
-  const multiText = document.createElement("p");
-  multiText.textContent = "Erstelle eine Lobby mit Code und teile den Tisch für eine klassische Durak-Partie.";
-  const multiButton = document.createElement("button");
-  multiButton.textContent = "Lobby entdecken";
-  multiButton.addEventListener("click", () => setView("multiplayer"));
-  multiCard.appendChild(multiTitle);
-  multiCard.appendChild(multiText);
-  multiCard.appendChild(multiButton);
-
-  modeGrid.appendChild(soloCard);
-  modeGrid.appendChild(multiCard);
-
-  container.appendChild(hero);
-  container.appendChild(modeGrid);
-  return container;
-}
-
-function createSoloSetupView() {
-  const container = document.createElement("div");
-  container.className = "panel form-panel";
-  const header = document.createElement("header");
-  header.className = "panel-header";
-  const title = document.createElement("h1");
-  title.textContent = "Solo-Modus";
-  header.appendChild(title);
-
-  const form = document.createElement("form");
-  form.className = "form-fields";
-  const label = document.createElement("label");
-  label.textContent = "Dein Spielername";
-  const input = document.createElement("input");
-  input.type = "text";
-  input.placeholder = "z. B. Kartengott";
-  input.required = true;
-
-  const controls = document.createElement("div");
-  controls.className = "form-actions";
-  const backButton = document.createElement("button");
-  backButton.type = "button";
-  backButton.className = "secondary";
-  backButton.textContent = "Zurück";
-  backButton.addEventListener("click", () => setView("home"));
-
-  const startButton = document.createElement("button");
-  startButton.type = "submit";
-  startButton.textContent = "Spiel starten";
-
-  controls.appendChild(backButton);
-  controls.appendChild(startButton);
-  form.appendChild(label);
-  form.appendChild(input);
-  form.appendChild(controls);
-
-  form.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const name = input.value.trim() || "Spieler";
-    startSoloGame(name);
-  });
-
-  container.appendChild(header);
-  container.appendChild(form);
-  return container;
-}
-
-function startSoloGame(playerName) {
-  const game = new DurakGame({
-    players: [
-      { id: "player", name: playerName, type: "human" },
-      { id: "ai", name: "Aurora KI", type: "ai" }
-    ],
-    mode: "solo"
-  });
-  game.startNewGame();
-  AppState.game = game;
-  AppState.localPlayerId = "player";
-  AppState.mode = "solo";
-  setView("game");
-  queueAIMoveIfNeeded();
-}
+const TableState = {
+  mode: null,
+  game: null,
+  lobby: null,
+  lobbyCode: null,
+  localPlayerId: null,
+  aiTimeout: null
+};
 
 function generateLobbyCode() {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -621,6 +482,7 @@ function getLobbyStorageKey(code) {
 }
 
 function loadLobby(code) {
+  if (!code) return null;
   const raw = localStorage.getItem(getLobbyStorageKey(code));
   if (!raw) return null;
   try {
@@ -635,880 +497,818 @@ function saveLobby(lobby) {
   localStorage.setItem(getLobbyStorageKey(lobby.code), JSON.stringify(lobby));
 }
 
-function createMultiplayerView() {
-  const wrapper = document.createElement("div");
-  wrapper.className = "panel lobby-panel";
-  const header = document.createElement("header");
-  header.className = "panel-header";
-  const title = document.createElement("h1");
-  title.textContent = "Multiplayer Lobby";
-  header.appendChild(title);
+function removeLobby(code) {
+  localStorage.removeItem(getLobbyStorageKey(code));
+}
 
-  const columns = document.createElement("div");
-  columns.className = "lobby-columns";
+function getQueryParam(name) {
+  const params = new URLSearchParams(window.location.search);
+  return params.get(name);
+}
 
-  const createSection = document.createElement("div");
-  createSection.className = "lobby-card";
-  const createTitle = document.createElement("h2");
-  createTitle.textContent = "Neue Lobby";
-  const createText = document.createElement("p");
-  createText.textContent = "Erstelle einen Raum und teile den Code mit deinem Mitspieler.";
-  const createForm = document.createElement("form");
-  createForm.className = "form-fields";
-  const createLabel = document.createElement("label");
-  createLabel.textContent = "Dein Name";
-  const createInput = document.createElement("input");
-  createInput.type = "text";
-  createInput.placeholder = "z. B. Host";
-  createInput.required = true;
-  const createButton = document.createElement("button");
-  createButton.type = "submit";
-  createButton.textContent = "Lobby erstellen";
+function uppercaseCode(value) {
+  return value.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+}
 
-  createForm.appendChild(createLabel);
-  createForm.appendChild(createInput);
-  createForm.appendChild(createButton);
+let toastTimeout = null;
+function showToast(text) {
+  const toast = document.getElementById("toast");
+  if (!toast) {
+    console.log(text);
+    return;
+  }
+  toast.textContent = text;
+  toast.hidden = false;
+  toast.classList.add("visible");
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => {
+    toast.classList.remove("visible");
+    toast.hidden = true;
+  }, 2400);
+}
 
-  createForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const name = createInput.value.trim() || "Host";
-    const code = generateLobbyCode();
-    const lobby = {
-      code,
-      hostId: createId(),
-      players: [],
-      status: "waiting",
-      gameState: null
-    };
-    const player = { id: lobby.hostId, name, type: "human" };
-    lobby.players.push(player);
-    saveLobby(lobby);
-    AppState.lobby = lobby;
-    AppState.localPlayerId = lobby.hostId;
-    AppState.mode = "lobby";
-    sessionStorage.setItem(`durak_local_${code}`, lobby.hostId);
-    setView("lobby");
+function initHomePage() {
+  // Home-Seite benötigt keine spezielle Logik.
+}
+
+function initSetupPage() {
+  const mode = getQueryParam("mode") || "solo";
+  const soloSection = document.querySelector('.setup-panel[data-mode="solo"]');
+  const multiSection = document.querySelector('.setup-panel[data-mode="multiplayer"]');
+  if (soloSection) soloSection.hidden = mode !== "solo";
+  if (multiSection) multiSection.hidden = mode !== "multiplayer";
+
+  if (mode === "solo") {
+    const form = document.getElementById("soloForm");
+    if (!form) return;
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const formData = new FormData(form);
+      const name = (formData.get("player") || "Spieler").toString().trim() || "Spieler";
+      const playerId = createId();
+      const players = [
+        { id: playerId, name, type: "human" }
+      ];
+      SOLO_AI_NAMES.forEach((aiName) => {
+        players.push({ id: createId(), name: aiName, type: "ai" });
+      });
+      const game = new DurakGame({ players, mode: "solo" });
+      game.startNewGame();
+      TableState.mode = "solo";
+      TableState.game = game;
+      TableState.localPlayerId = playerId;
+      persistSoloState();
+      sessionStorage.setItem(STORAGE_KEYS.SOLO_PLAYER, playerId);
+      window.location.href = "table.html?mode=solo";
+    });
+  } else {
+    const createForm = document.getElementById("createLobbyForm");
+    const joinForm = document.getElementById("joinLobbyForm");
+
+    if (createForm) {
+      createForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const formData = new FormData(createForm);
+        const name = (formData.get("host") || "Host").toString().trim() || "Host";
+        const code = generateLobbyCode();
+        const hostId = createId();
+        const lobby = {
+          code,
+          hostId,
+          players: [{ id: hostId, name, type: "human" }],
+          status: "waiting",
+          gameState: null,
+          createdAt: new Date().toISOString()
+        };
+        saveLobby(lobby);
+        sessionStorage.setItem(`durak_local_${code}`, hostId);
+        window.location.href = `lobby.html?code=${code}`;
+      });
+    }
+
+    if (joinForm) {
+      joinForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const formData = new FormData(joinForm);
+        const rawCode = (formData.get("code") || "").toString();
+        const name = (formData.get("guest") || "Gast").toString().trim() || "Gast";
+        const code = uppercaseCode(rawCode);
+        if (code.length !== 5) {
+          showToast("Bitte gib einen gültigen Code ein.");
+          return;
+        }
+        const lobby = loadLobby(code);
+        if (!lobby) {
+          showToast("Diese Lobby existiert nicht.");
+          return;
+        }
+        if (lobby.status === "playing") {
+          showToast("Das Spiel läuft bereits.");
+          return;
+        }
+        if (lobby.players.length >= 4) {
+          showToast("Alle vier Plätze sind bereits besetzt.");
+          return;
+        }
+        const playerId = createId();
+        lobby.players.push({ id: playerId, name, type: "human" });
+        saveLobby(lobby);
+        sessionStorage.setItem(`durak_local_${code}`, playerId);
+        window.location.href = `lobby.html?code=${code}`;
+      });
+    }
+  }
+}
+
+function initLobbyPage() {
+  const code = uppercaseCode(getQueryParam("code") || "");
+  const seatsElement = document.getElementById("lobbySeats");
+  const messageElement = document.getElementById("lobbyMessage");
+  const codeElement = document.getElementById("lobbyCode");
+  const startButton = document.getElementById("startGameButton");
+  const leaveButton = document.getElementById("leaveLobbyButton");
+  const logElement = document.getElementById("lobbyLog");
+
+  if (!code) {
+    messageElement.textContent = "Kein Lobby-Code angegeben.";
+    if (startButton) startButton.disabled = true;
+    if (seatsElement) seatsElement.innerHTML = "";
+    return;
+  }
+
+  codeElement.textContent = code;
+  let lobby = loadLobby(code);
+  if (!lobby) {
+    messageElement.textContent = "Die Lobby wurde nicht gefunden.";
+    if (startButton) startButton.disabled = true;
+    return;
+  }
+
+  let localPlayerId = sessionStorage.getItem(`durak_local_${code}`);
+  if (!localPlayerId) {
+    const firstPlayer = lobby.players[0];
+    if (firstPlayer) {
+      localPlayerId = firstPlayer.id;
+      sessionStorage.setItem(`durak_local_${code}`, localPlayerId);
+    }
+  }
+
+  function renderLobby() {
+    lobby = loadLobby(code);
+    if (!lobby) {
+      messageElement.textContent = "Die Lobby wurde geschlossen.";
+      if (seatsElement) seatsElement.innerHTML = "";
+      if (startButton) startButton.disabled = true;
+      return;
+    }
+
+    if (lobby.status === "playing" && lobby.gameState) {
+      window.location.href = `table.html?mode=lobby&code=${code}`;
+      return;
+    }
+
+    const seats = lobby.players;
+    const seatLabels = ["Süd", "West", "Nord", "Ost"];
+    if (seatsElement) {
+      seatsElement.innerHTML = "";
+      for (let i = 0; i < 4; i += 1) {
+        const container = document.createElement("div");
+        container.className = "lobby-seat";
+        const headline = document.createElement("h3");
+        headline.textContent = seatLabels[i];
+        container.appendChild(headline);
+        if (seats[i]) {
+          const player = seats[i];
+          const name = document.createElement("p");
+          name.className = "seat-name";
+          name.textContent = player.name;
+          container.appendChild(name);
+          const tags = document.createElement("span");
+          tags.className = "seat-tags";
+          const parts = [];
+          if (player.id === lobby.hostId) parts.push("Host");
+          if (player.id === localPlayerId) parts.push("Du");
+          if (player.type === "ai") parts.push("KI");
+          tags.textContent = parts.join(" • ");
+          container.appendChild(tags);
+        } else {
+          const empty = document.createElement("p");
+          empty.className = "seat-empty";
+          empty.textContent = "Frei";
+          container.appendChild(empty);
+        }
+        seatsElement.appendChild(container);
+      }
+    }
+
+    const missing = 4 - seats.length;
+    if (missing > 0) {
+      messageElement.textContent = `Es fehlen noch ${missing} Spieler für den Vierer-Tisch.`;
+    } else {
+      messageElement.textContent = "Alle Plätze besetzt. Host kann das Spiel starten.";
+    }
+
+    if (logElement) {
+      logElement.innerHTML = "";
+      const entries = lobby.gameState?.log || [];
+      if (!entries.length) {
+        const empty = document.createElement("li");
+        empty.textContent = "Noch keine Aktionen aufgezeichnet.";
+        logElement.appendChild(empty);
+      } else {
+        entries
+          .slice(-6)
+          .reverse()
+          .forEach((entry) => {
+            const item = document.createElement("li");
+            item.textContent = `${formatTime(entry.timestamp)} – ${entry.text}`;
+            logElement.appendChild(item);
+          });
+      }
+    }
+
+    if (startButton) {
+      const isHost = lobby.hostId === localPlayerId;
+      startButton.disabled = !isHost || lobby.players.length < 4;
+      startButton.textContent = lobby.players.length < 4 ? "Warte auf Mitspieler" : "Spiel beginnen";
+    }
+  }
+
+  renderLobby();
+
+  if (startButton) {
+    startButton.addEventListener("click", () => {
+      lobby = loadLobby(code);
+      if (!lobby) {
+        showToast("Lobby nicht mehr vorhanden.");
+        return;
+      }
+      if (lobby.hostId !== localPlayerId) {
+        showToast("Nur der Host kann starten.");
+        return;
+      }
+      if (lobby.players.length < 4) {
+        showToast("Für den Tisch werden vier Spieler benötigt.");
+        return;
+      }
+      const game = new DurakGame({ players: lobby.players, mode: "lobby" });
+      game.startNewGame();
+      lobby.status = "playing";
+      lobby.gameState = game.toJSON();
+      saveLobby(lobby);
+      window.location.href = `table.html?mode=lobby&code=${code}`;
+    });
+  }
+
+  if (leaveButton) {
+    leaveButton.addEventListener("click", () => {
+      leaveLobby(code, localPlayerId);
+      window.location.href = "setup.html?mode=multiplayer";
+    });
+  }
+
+  window.addEventListener("storage", (event) => {
+    if (event.key !== getLobbyStorageKey(code)) return;
+    renderLobby();
   });
+}
 
-  createSection.appendChild(createTitle);
-  createSection.appendChild(createText);
-  createSection.appendChild(createForm);
+function leaveLobby(code, playerId) {
+  if (!code || !playerId) return;
+  const lobby = loadLobby(code);
+  if (!lobby) return;
+  lobby.players = lobby.players.filter((player) => player.id !== playerId);
+  if (!lobby.players.length) {
+    removeLobby(code);
+  } else {
+    if (lobby.hostId === playerId) {
+      lobby.hostId = lobby.players[0].id;
+    }
+    lobby.status = "waiting";
+    lobby.gameState = null;
+    saveLobby(lobby);
+  }
+  sessionStorage.removeItem(`durak_local_${code}`);
+}
 
-  const joinSection = document.createElement("div");
-  joinSection.className = "lobby-card";
-  const joinTitle = document.createElement("h2");
-  joinTitle.textContent = "Lobby beitreten";
-  const joinText = document.createElement("p");
-  joinText.textContent = "Gib den Code ein, um die Lobby zu betreten.";
-  const joinForm = document.createElement("form");
-  joinForm.className = "form-fields";
+function initTablePage() {
+  const mode = getQueryParam("mode") || "solo";
+  TableState.mode = mode;
+  const restartButton = document.getElementById("restartButton");
+  const backLink = document.getElementById("backToLobby");
 
-  const codeLabel = document.createElement("label");
-  codeLabel.textContent = "Code";
-  const codeInput = document.createElement("input");
-  codeInput.type = "text";
-  codeInput.placeholder = "ABCDE";
-  codeInput.required = true;
-  codeInput.maxLength = 5;
-  codeInput.style.textTransform = "uppercase";
-
-  const nameLabel = document.createElement("label");
-  nameLabel.textContent = "Dein Name";
-  const nameInput = document.createElement("input");
-  nameInput.type = "text";
-  nameInput.placeholder = "z. B. Gast";
-  nameInput.required = true;
-
-  const joinButton = document.createElement("button");
-  joinButton.type = "submit";
-  joinButton.textContent = "Beitreten";
-
-  joinForm.appendChild(codeLabel);
-  joinForm.appendChild(codeInput);
-  joinForm.appendChild(nameLabel);
-  joinForm.appendChild(nameInput);
-  joinForm.appendChild(joinButton);
-
-  joinForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const code = codeInput.value.trim().toUpperCase();
-    const name = nameInput.value.trim() || "Gast";
+  if (mode === "solo") {
+    const rawState = localStorage.getItem(STORAGE_KEYS.SOLO_STATE);
+    if (!rawState) {
+      window.location.replace("setup.html?mode=solo");
+      return;
+    }
+    let state;
+    try {
+      state = JSON.parse(rawState);
+    } catch (error) {
+      console.error(error);
+      localStorage.removeItem(STORAGE_KEYS.SOLO_STATE);
+      window.location.replace("setup.html?mode=solo");
+      return;
+    }
+    TableState.game = DurakGame.fromState(state.game);
+    TableState.localPlayerId = state.localPlayerId;
+    if (!TableState.localPlayerId) {
+      TableState.localPlayerId = sessionStorage.getItem(STORAGE_KEYS.SOLO_PLAYER);
+    }
+    renderTable();
+    queueAIMoveIfNeeded();
+    if (backLink) backLink.href = "index.html";
+  } else {
+    const code = uppercaseCode(getQueryParam("code") || "");
+    if (!code) {
+      window.location.replace("setup.html?mode=multiplayer");
+      return;
+    }
     const lobby = loadLobby(code);
     if (!lobby) {
-      alert("Keine Lobby mit diesem Code gefunden.");
+      showToast("Lobby nicht gefunden.");
+      window.location.replace("setup.html?mode=multiplayer");
       return;
     }
-    if (lobby.status === "playing") {
-      alert("Diese Lobby spielt bereits.");
+    if (lobby.status !== "playing" || !lobby.gameState) {
+      window.location.replace(`lobby.html?code=${code}`);
       return;
     }
-    if (lobby.players.length >= 2) {
-      alert("Die Lobby ist bereits voll.");
+    const playerId = sessionStorage.getItem(`durak_local_${code}`);
+    if (!playerId) {
+      window.location.replace(`lobby.html?code=${code}`);
       return;
     }
-    const playerId = createId();
-    lobby.players.push({ id: playerId, name, type: "human" });
-    saveLobby(lobby);
-    AppState.lobby = lobby;
-    AppState.localPlayerId = playerId;
-    AppState.mode = "lobby";
-    sessionStorage.setItem(`durak_local_${code}`, playerId);
-    setView("lobby");
-  });
+    TableState.lobby = lobby;
+    TableState.lobbyCode = code;
+    TableState.game = DurakGame.fromState(lobby.gameState);
+    TableState.localPlayerId = playerId;
+    renderTable();
+    if (backLink) backLink.href = `lobby.html?code=${code}`;
 
-  joinSection.appendChild(joinTitle);
-  joinSection.appendChild(joinText);
-  joinSection.appendChild(joinForm);
+    window.addEventListener("storage", handleTableStorageSync);
+  }
 
-  columns.appendChild(createSection);
-  columns.appendChild(joinSection);
-
-  const backActions = document.createElement("div");
-  backActions.className = "form-actions";
-  const backButton = document.createElement("button");
-  backButton.className = "secondary";
-  backButton.textContent = "Zur Startseite";
-  backButton.addEventListener("click", () => setView("home"));
-
-  backActions.appendChild(backButton);
-  wrapper.appendChild(header);
-  wrapper.appendChild(columns);
-  wrapper.appendChild(backActions);
-  return wrapper;
+  if (restartButton) {
+    restartButton.addEventListener("click", handleRestart);
+  }
 }
 
-function createLobbyView() {
-  const lobby = AppState.lobby;
+function persistSoloState() {
+  if (TableState.mode !== "solo" || !TableState.game) return;
+  const payload = {
+    localPlayerId: TableState.localPlayerId,
+    game: TableState.game.toJSON()
+  };
+  localStorage.setItem(STORAGE_KEYS.SOLO_STATE, JSON.stringify(payload));
+}
+
+function persistLobbyState() {
+  if (TableState.mode !== "lobby" || !TableState.lobbyCode || !TableState.game) return;
+  const lobby = loadLobby(TableState.lobbyCode);
   if (!lobby) {
-    setView("multiplayer");
-    return document.createElement("div");
+    showToast("Lobby wurde geschlossen.");
+    return;
   }
-
-  const container = document.createElement("div");
-  container.className = "panel lobby-room";
-
-  const header = document.createElement("header");
-  header.className = "panel-header";
-  const title = document.createElement("h1");
-  title.textContent = "Deine Lobby";
-  header.appendChild(title);
-
-  const codeDisplay = document.createElement("div");
-  codeDisplay.className = "lobby-code";
-  codeDisplay.textContent = lobby.code;
-
-  const playerList = document.createElement("div");
-  playerList.className = "player-tags";
-
-  lobby.players.forEach((player) => {
-    const tag = document.createElement("div");
-    tag.className = "player-tag";
-    tag.textContent = player.name;
-    if (player.id === lobby.hostId) {
-      tag.textContent += " • Host";
-    }
-    if (player.id === AppState.localPlayerId) {
-      tag.textContent += " • Du";
-    }
-    playerList.appendChild(tag);
-  });
-
-  const info = document.createElement("p");
-  info.className = "lobby-info";
-  info.textContent = lobby.players.length < 2
-    ? "Warte auf einen weiteren Spieler..."
-    : lobby.hostId === AppState.localPlayerId
-      ? "Alle bereit. Du kannst das Spiel starten."
-      : "Warte darauf, dass der Host das Spiel startet.";
-
-  const actions = document.createElement("div");
-  actions.className = "form-actions";
-
-  container.appendChild(header);
-  container.appendChild(codeDisplay);
-  container.appendChild(playerList);
-  container.appendChild(info);
-
-  if (lobby.hostId === AppState.localPlayerId) {
-    const startButton = document.createElement("button");
-    startButton.textContent = "Spiel starten";
-    startButton.disabled = lobby.players.length < 2;
-    startButton.addEventListener("click", () => {
-      const current = loadLobby(lobby.code);
-      if (!current) return;
-      current.status = "playing";
-      const game = new DurakGame({
-        players: current.players,
-        mode: "lobby"
-      });
-      game.startNewGame();
-      current.gameState = game.toJSON();
-      saveLobby(current);
-      AppState.game = game;
-      AppState.lobby = current;
-      AppState.mode = "lobby";
-      setView("game");
-    });
-    actions.appendChild(startButton);
-  }
-
-  const leaveButton = document.createElement("button");
-  leaveButton.className = "secondary";
-  leaveButton.textContent = "Lobby verlassen";
-  leaveButton.addEventListener("click", () => {
-    leaveLobby();
-    setView("home");
-  });
-
-  actions.appendChild(leaveButton);
-  container.appendChild(actions);
-  return container;
+  lobby.gameState = TableState.game.toJSON();
+  lobby.status = TableState.game.status === "running" ? "playing" : "finished";
+  saveLobby(lobby);
+  TableState.lobby = lobby;
 }
 
-function leaveLobby() {
-  const lobby = AppState.lobby;
-  if (!lobby) return;
-  const updated = loadLobby(lobby.code);
-  if (updated) {
-    updated.players = updated.players.filter((player) => player.id !== AppState.localPlayerId);
-    if (!updated.players.length) {
-      localStorage.removeItem(getLobbyStorageKey(updated.code));
-    } else {
-      if (updated.hostId === AppState.localPlayerId) {
-        updated.hostId = updated.players[0].id;
-      }
-      saveLobby(updated);
+function afterInteraction() {
+  if (TableState.mode === "solo") {
+    persistSoloState();
+  } else {
+    persistLobbyState();
+  }
+  renderTable();
+  queueAIMoveIfNeeded();
+}
+
+function sortHand(hand) {
+  return [...hand].sort((a, b) => {
+    if (a.suit === b.suit) {
+      return a.value - b.value;
+    }
+    return SUIT_ORDER.indexOf(a.suit) - SUIT_ORDER.indexOf(b.suit);
+  });
+}
+
+function getSeatAssignments(game, localPlayerId) {
+  const assignments = [];
+  if (!game) return assignments;
+  let localIndex = game.players.findIndex((player) => player.id === localPlayerId);
+  if (localIndex === -1) {
+    localIndex = 0;
+  }
+  const total = game.players.length;
+  const offsets = [0, 1, 2, 3];
+  offsets.forEach((offset, seatIndex) => {
+    const playerIndex = (localIndex + offset) % total;
+    const player = game.players[playerIndex];
+    assignments.push({
+      seat: SEAT_ORDER[seatIndex],
+      player,
+      isLocal: seatIndex === 0
+    });
+  });
+  return assignments;
+}
+
+function renderTable() {
+  const game = TableState.game;
+  if (!game) return;
+
+  document.getElementById("deckCount").textContent = `${game.deck.length}`;
+  document.getElementById("discardCount").textContent = `${game.discard.length}`;
+  const messageElement = document.getElementById("gameMessage");
+  messageElement.textContent = game.message;
+
+  const trumpContainer = document.getElementById("trumpCard");
+  if (trumpContainer) {
+    trumpContainer.innerHTML = "";
+    if (game.trumpCard) {
+      trumpContainer.appendChild(createCardElement(game.trumpCard, { small: true }));
     }
   }
-  sessionStorage.removeItem(`durak_local_${lobby.code}`);
-  AppState.lobby = null;
-  AppState.game = null;
-  AppState.localPlayerId = null;
-  AppState.mode = "home";
+
+  const tablePairs = document.getElementById("tablePairs");
+  if (tablePairs) {
+    tablePairs.innerHTML = "";
+    game.table.forEach((pair) => {
+      const group = document.createElement("div");
+      group.className = "pair";
+      const attackWrapper = document.createElement("div");
+      attackWrapper.className = "pair-card attack";
+      if (pair.attack) {
+        attackWrapper.appendChild(createCardElement(pair.attack));
+      }
+      const defenseWrapper = document.createElement("div");
+      defenseWrapper.className = "pair-card defense";
+      if (pair.defense) {
+        defenseWrapper.appendChild(createCardElement(pair.defense));
+      }
+      group.appendChild(attackWrapper);
+      group.appendChild(defenseWrapper);
+      tablePairs.appendChild(group);
+    });
+  }
+
+  const assignments = getSeatAssignments(game, TableState.localPlayerId);
+  assignments.forEach(({ seat, player, isLocal }) => {
+    const seatElement = document.querySelector(`.seat-${seat}`);
+    if (!seatElement) return;
+    const nameElement = seatElement.querySelector(".seat-name");
+    const statusElement = seatElement.querySelector(".seat-status");
+    const cardsElement = seatElement.querySelector(".seat-cards");
+
+    if (!player) {
+      seatElement.classList.add("seat-empty");
+      if (nameElement) nameElement.textContent = "Leer";
+      if (statusElement) statusElement.textContent = "";
+      if (cardsElement) cardsElement.innerHTML = "";
+      return;
+    }
+
+    seatElement.classList.toggle("seat-local", isLocal);
+    seatElement.classList.toggle("seat-attacker", player.id === game.currentAttacker.id);
+    seatElement.classList.toggle("seat-defender", player.id === game.currentDefender.id);
+
+    if (nameElement) {
+      nameElement.textContent = isLocal ? `${player.name} (Du)` : player.name;
+    }
+    if (statusElement) {
+      const badges = [];
+      if (player.id === game.currentAttacker.id) badges.push("Angriff");
+      if (player.id === game.currentDefender.id) badges.push("Verteidigung");
+      if (player.hand.length === 0) badges.push("fertig");
+      if (player.type === "ai" && !isLocal) badges.push("KI");
+      statusElement.textContent = badges.join(" • ");
+    }
+    if (!cardsElement) return;
+    cardsElement.innerHTML = "";
+    if (isLocal) {
+      const sorted = sortHand(player.hand);
+      sorted.forEach((card) => {
+        const cardElement = createCardElement(card);
+        cardElement.dataset.cardId = card.id;
+        cardElement.tabIndex = 0;
+        cardElement.setAttribute("role", "button");
+        cardElement.setAttribute("aria-label", `${card.rank}${card.suitSymbol}`);
+        cardElement.addEventListener("click", () => handleCardClick(card.id));
+        cardElement.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            handleCardClick(card.id);
+          }
+        });
+        cardsElement.appendChild(cardElement);
+      });
+    } else {
+      for (let i = 0; i < player.hand.length; i += 1) {
+        const back = document.createElement("div");
+        back.className = "card card-back small";
+        cardsElement.appendChild(back);
+      }
+      const counter = document.createElement("span");
+      counter.className = "card-count";
+      counter.textContent = `${player.hand.length}`;
+      cardsElement.appendChild(counter);
+    }
+  });
+
+  updatePlayerActions();
+  updateLogPanel(game);
+  updateEndPanel(game);
+}
+
+function updatePlayerActions() {
+  const actionsContainer = document.getElementById("playerActions");
+  if (!actionsContainer) return;
+  actionsContainer.innerHTML = "";
+  const game = TableState.game;
+  if (!game || game.status !== "running") return;
+  const localId = TableState.localPlayerId;
+  if (!localId) return;
+  const isAttacker = game.currentAttacker.id === localId;
+  const isDefender = game.currentDefender.id === localId;
+
+  if (isDefender && game.phase === "defend-select") {
+    const takeButton = document.createElement("button");
+    takeButton.className = "button ghost";
+    takeButton.textContent = "Karten aufnehmen";
+    takeButton.addEventListener("click", handleTakeCards);
+    actionsContainer.appendChild(takeButton);
+  }
+
+  if (
+    isAttacker &&
+    game.phase === "attack-throw-in" &&
+    game.table.length &&
+    game.table.every((pair) => pair.defense)
+  ) {
+    const endButton = document.createElement("button");
+    endButton.className = "button";
+    endButton.textContent = "Angriff beenden";
+    endButton.addEventListener("click", handleEndAttack);
+    actionsContainer.appendChild(endButton);
+  }
 }
 
 function createCardElement(card, options = {}) {
   const cardElement = document.createElement("div");
   cardElement.className = "card";
-  if (options.hidden) {
-    cardElement.classList.add("card-back");
-    cardElement.textContent = "Durak";
-    return cardElement;
-  }
-
-  if (options.disabled) {
-    cardElement.classList.add("disabled");
-  }
-
-  if (options.selectable) {
-    cardElement.dataset.cardId = card.id;
-    cardElement.addEventListener("click", () => {
-      options.onSelect?.(card);
-    });
-  }
-
-  const rankTop = document.createElement("span");
-  rankTop.className = "rank";
-  rankTop.textContent = card.rank;
-  rankTop.style.color = card.color === "red" ? "#d6497e" : "#15223b";
-
+  if (options.small) cardElement.classList.add("small");
+  const rank = document.createElement("span");
+  rank.className = "card-rank";
+  rank.textContent = card.rank;
   const suit = document.createElement("span");
-  suit.className = "suit";
+  suit.className = "card-suit";
   suit.textContent = card.suitSymbol;
-  suit.style.color = card.color === "red" ? "#d6497e" : "#15223b";
-
-  const rankBottom = document.createElement("span");
-  rankBottom.className = "rank";
-  rankBottom.textContent = card.rank;
-  rankBottom.style.alignSelf = "flex-end";
-  rankBottom.style.color = card.color === "red" ? "#d6497e" : "#15223b";
-
-  cardElement.appendChild(rankTop);
+  if (card.color === "red") {
+    cardElement.classList.add("red");
+  }
+  cardElement.appendChild(rank);
   cardElement.appendChild(suit);
-  cardElement.appendChild(rankBottom);
   return cardElement;
 }
 
-function renderTable(game, localPlayerId) {
-  const table = document.createElement("div");
-  table.className = "table";
-
-  if (!game.table.length) {
-    const placeholder = document.createElement("div");
-    placeholder.className = "message";
-    placeholder.textContent = "Der Tisch ist frei. Der Angreifer wählt eine Karte.";
-    table.appendChild(placeholder);
-    return table;
-  }
-
-  game.table.forEach((pair) => {
-    const slot = document.createElement("div");
-    slot.className = "table-slot";
-    if (pair.attack) {
-      slot.appendChild(createCardElement(pair.attack));
-    }
-    if (pair.defense) {
-      slot.appendChild(createCardElement(pair.defense));
-    }
-    table.appendChild(slot);
-  });
-  return table;
-}
-
-function renderPlayerSection(game, player, localPlayerId) {
-  const wrapper = document.createElement("div");
-  wrapper.className = "player-panel";
-
-  const header = document.createElement("div");
-  header.className = "player-header";
-  const title = document.createElement("h3");
-  title.textContent = player.name;
-  const badge = document.createElement("span");
-  badge.className = "role-chip";
-  if (player.id === game.currentAttacker.id) {
-    badge.textContent = "Angriff";
-    badge.classList.add("role-attack");
-  } else if (player.id === game.currentDefender.id) {
-    badge.textContent = "Verteidigung";
-    badge.classList.add("role-defense");
-  } else {
-    badge.textContent = "Zuschauer";
-    badge.classList.add("role-idle");
-  }
-  header.appendChild(title);
-  header.appendChild(badge);
-
-  const hand = document.createElement("div");
-  hand.className = "player-hand";
-
-  const isLocal = player.id === localPlayerId || player.type === "ai";
-  const isAttacker = player.id === game.currentAttacker.id;
-  const isDefender = player.id === game.currentDefender.id;
-
-  let selectableCards = [];
-  if (game.status === "running" && isLocal) {
-    if (isAttacker && ["attack-select", "attack-throw-in"].includes(game.phase)) {
-      selectableCards = player.hand.filter((card) => game.isCardValidForAttack(card));
-    } else if (isDefender && game.phase === "defend-select") {
-      const lastPair = game.table[game.table.length - 1];
-      selectableCards = lastPair
-        ? game.getValidDefenseCards(lastPair.attack, player)
-        : [];
-    }
-  }
-
-  player.hand.forEach((card) => {
-    const hidden = !isLocal;
-    const selectable = selectableCards.some((selectableCard) => selectableCard.id === card.id);
-    const cardElement = createCardElement(card, {
-      hidden,
-      selectable,
-      disabled: !selectable,
-      onSelect: (selectedCard) => {
-        if (isAttacker) {
-          handleAttackCard(selectedCard);
-        } else if (isDefender) {
-          handleDefenseCard(selectedCard);
-        }
-      }
-    });
-    hand.appendChild(cardElement);
-  });
-
-  wrapper.appendChild(header);
-  wrapper.appendChild(hand);
-
-  if (isLocal && isDefender && game.phase === "defend-select") {
-    const controls = document.createElement("div");
-    controls.className = "turn-actions";
-    const takeButton = document.createElement("button");
-    takeButton.className = "secondary";
-    takeButton.textContent = "Aufnehmen";
-    takeButton.addEventListener("click", () => {
-      try {
-        game.defenderTake(player.id);
-        afterGameInteraction();
-      } catch (error) {
-        showToast(error.message);
-      }
-    });
-    controls.appendChild(takeButton);
-    wrapper.appendChild(controls);
-  }
-
-  if (isLocal && isAttacker && game.phase === "attack-throw-in" && game.table.every((pair) => pair.defense)) {
-    const controls = document.createElement("div");
-    controls.className = "turn-actions";
-    const endButton = document.createElement("button");
-    endButton.textContent = "Angriff beenden";
-    endButton.addEventListener("click", () => {
-      try {
-        game.endAttack(player.id);
-        afterGameInteraction();
-      } catch (error) {
-        showToast(error.message);
-      }
-    });
-    controls.appendChild(endButton);
-    wrapper.appendChild(controls);
-  }
-
-  return wrapper;
-}
-
-function renderGameMeta(game) {
-  const meta = document.createElement("div");
-  meta.className = "meta-strip";
-
-  const trumpBlock = document.createElement("div");
-  trumpBlock.className = "meta-block";
-  const trumpTitle = document.createElement("span");
-  trumpTitle.className = "meta-title";
-  trumpTitle.textContent = "Trumpf";
-  const trumpValue = document.createElement("div");
-  trumpValue.className = "meta-value";
-  if (game.trumpCard) {
-    trumpValue.appendChild(createCardElement(game.trumpCard));
-    const suitName = SUITS.find((suit) => suit.key === game.trumpCard.suit)?.label ?? "";
-    const text = document.createElement("span");
-    text.textContent = suitName;
-    trumpValue.appendChild(text);
-  }
-  trumpBlock.appendChild(trumpTitle);
-  trumpBlock.appendChild(trumpValue);
-
-  const deckBlock = document.createElement("div");
-  deckBlock.className = "meta-block";
-  const deckTitle = document.createElement("span");
-  deckTitle.className = "meta-title";
-  deckTitle.textContent = "Restkarten";
-  const deckCount = document.createElement("span");
-  deckCount.className = "meta-value";
-  deckCount.textContent = `${game.deck.length} Karten im Stapel`;
-  deckBlock.appendChild(deckTitle);
-  deckBlock.appendChild(deckCount);
-
-  const discardBlock = document.createElement("div");
-  discardBlock.className = "meta-block";
-  const discardTitle = document.createElement("span");
-  discardTitle.className = "meta-title";
-  discardTitle.textContent = "Ablage";
-  const discardCount = document.createElement("span");
-  discardCount.className = "meta-value";
-  discardCount.textContent = `${game.discard.length} Karten abgelegt`;
-  discardBlock.appendChild(discardTitle);
-  discardBlock.appendChild(discardCount);
-
-  meta.appendChild(trumpBlock);
-  meta.appendChild(deckBlock);
-  meta.appendChild(discardBlock);
-  return meta;
-}
-
-function renderLogSection(game) {
-  const section = document.createElement("div");
-  section.className = "log-panel";
-
-  const title = document.createElement("h3");
-  title.textContent = "Spielverlauf";
-  section.appendChild(title);
-
+function updateLogPanel(game) {
+  const list = document.getElementById("logList");
+  if (!list) return;
+  list.innerHTML = "";
   if (!game.log.length) {
-    const empty = document.createElement("p");
-    empty.className = "log-empty";
+    const empty = document.createElement("li");
     empty.textContent = "Noch keine Aktionen protokolliert.";
-    section.appendChild(empty);
-    return section;
+    list.appendChild(empty);
+    return;
   }
-
-  const list = document.createElement("ul");
-  list.className = "log-list";
-  const entries = [...game.log].slice(-8).reverse();
-  entries.forEach((entry) => {
-    const item = document.createElement("li");
-    item.className = `log-entry log-entry-${entry.type}`;
-    const text = document.createElement("span");
-    text.textContent = entry.text;
-    const time = document.createElement("time");
-    time.dateTime = entry.timestamp;
-    try {
-      time.textContent = new Date(entry.timestamp).toLocaleTimeString("de-DE", {
-        hour: "2-digit",
-        minute: "2-digit"
-      });
-    } catch (error) {
-      time.textContent = "";
-    }
-    item.appendChild(text);
-    item.appendChild(time);
-    list.appendChild(item);
-  });
-  section.appendChild(list);
-  return section;
-}
-
-function renderGameView() {
-  const game = AppState.game;
-  if (!game) {
-    setView("home");
-    return document.createElement("div");
-  }
-
-  const layout = document.createElement("div");
-  layout.className = "game-layout";
-
-  const topBar = document.createElement("div");
-  topBar.className = "top-bar";
-
-  const titleGroup = document.createElement("div");
-  titleGroup.className = "top-bar-titles";
-  const title = document.createElement("h1");
-  title.textContent = "Durak";
-  titleGroup.appendChild(title);
-
-  const statusChip = document.createElement("span");
-  statusChip.className = `status-chip status-${game.status}`;
-  const statusText =
-    game.status === "running"
-      ? "Im Spiel"
-      : game.status === "finished"
-        ? "Runde beendet"
-        : game.status === "draw"
-          ? "Unentschieden"
-          : "Pause";
-  statusChip.textContent = statusText;
-  titleGroup.appendChild(statusChip);
-
-  const backButton = document.createElement("button");
-  backButton.className = "secondary";
-  backButton.textContent = AppState.lobby ? "Zur Lobby" : "Verlassen";
-  backButton.addEventListener("click", () => {
-    if (AppState.lobby) {
-      leaveLobby();
-    }
-    AppState.game = null;
-    AppState.mode = "home";
-    setView("home");
-  });
-
-  topBar.appendChild(titleGroup);
-  topBar.appendChild(backButton);
-  layout.appendChild(topBar);
-
-  const message = document.createElement("div");
-  message.className = "message-banner";
-  message.textContent = game.message;
-  layout.appendChild(message);
-
-  layout.appendChild(renderGameMeta(game));
-
-  const boardRow = document.createElement("div");
-  boardRow.className = "board-row";
-
-  const tableColumn = document.createElement("div");
-  tableColumn.className = "table-column";
-  const tableSurface = document.createElement("div");
-  tableSurface.className = "table-surface";
-  tableSurface.appendChild(renderTable(game, AppState.localPlayerId));
-  tableColumn.appendChild(tableSurface);
-  boardRow.appendChild(tableColumn);
-
-  boardRow.appendChild(renderLogSection(game));
-
-  layout.appendChild(boardRow);
-
-  const playersSection = document.createElement("section");
-  playersSection.className = "players-section";
-  const playersHeading = document.createElement("div");
-  playersHeading.className = "players-heading";
-  const playersTitle = document.createElement("h2");
-  playersTitle.textContent = "Spielerübersicht";
-  playersHeading.appendChild(playersTitle);
-  playersSection.appendChild(playersHeading);
-
-  const playersGrid = document.createElement("div");
-  playersGrid.className = "players-grid";
-  game.players.forEach((player) => {
-    playersGrid.appendChild(renderPlayerSection(game, player, AppState.localPlayerId));
-  });
-  playersSection.appendChild(playersGrid);
-  layout.appendChild(playersSection);
-
-  if (game.status !== "running") {
-    const endPanel = document.createElement("div");
-    endPanel.className = "end-panel";
-
-    const endText = document.createElement("p");
-    endText.textContent =
-      game.status === "finished"
-        ? "Runde abgeschlossen – starte eine Revanche oder kehre zur Lobby zurück."
-        : game.status === "draw"
-          ? "Unentschieden! Mischt neu und versucht es direkt noch einmal."
-          : game.message;
-    endPanel.appendChild(endText);
-
-    const restartButton = document.createElement("button");
-    restartButton.textContent = "Neu starten";
-    restartButton.addEventListener("click", () => {
-      if (AppState.mode === "solo") {
-        AppState.game.startNewGame();
-        queueAIMoveIfNeeded();
-        render();
-      } else if (AppState.lobby) {
-        const lobby = loadLobby(AppState.lobby.code);
-        if (!lobby) return;
-        const gameInstance = new DurakGame({
-          players: lobby.players,
-          mode: "lobby"
-        });
-        gameInstance.startNewGame();
-        lobby.gameState = gameInstance.toJSON();
-        lobby.status = "playing";
-        saveLobby(lobby);
-        AppState.lobby = lobby;
-        AppState.game = gameInstance;
-        synchronizeGameState();
-        render();
-      }
+  game.log
+    .slice(-8)
+    .reverse()
+    .forEach((entry) => {
+      const item = document.createElement("li");
+      item.innerHTML = `<span>${formatTime(entry.timestamp)}</span><span>${entry.text}</span>`;
+      list.appendChild(item);
     });
-    endPanel.appendChild(restartButton);
-    layout.appendChild(endPanel);
-  }
-
-  return layout;
 }
 
-let toastTimeout = null;
-function showToast(text) {
-  let toast = document.querySelector(".toast");
-  if (!toast) {
-    toast = document.createElement("div");
-    toast.className = "toast";
-    toast.style.position = "fixed";
-    toast.style.bottom = "24px";
-    toast.style.left = "50%";
-    toast.style.transform = "translateX(-50%)";
-    toast.style.background = "rgba(36, 26, 18, 0.92)";
-    toast.style.color = "#f8f4ed";
-    toast.style.padding = "12px 18px";
-    toast.style.borderRadius = "12px";
-    toast.style.border = "1px solid rgba(249, 178, 76, 0.35)";
-    toast.style.boxShadow = "0 20px 40px rgba(0, 0, 0, 0.45)";
-    toast.style.fontSize = "14px";
-    toast.style.zIndex = "100";
-    document.body.appendChild(toast);
+function updateEndPanel(game) {
+  const panel = document.getElementById("endPanel");
+  const message = document.getElementById("endMessage");
+  if (!panel || !message) return;
+  if (game.status === "running") {
+    panel.hidden = true;
+    return;
   }
-  toast.textContent = text;
-  toast.style.opacity = "1";
-  clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => {
-    toast.style.opacity = "0";
-  }, 2200);
+  panel.hidden = false;
+  message.textContent = game.message;
+  const restartButton = document.getElementById("restartButton");
+  if (restartButton) {
+    if (TableState.mode === "lobby") {
+      const isHost = TableState.lobby?.hostId === TableState.localPlayerId;
+      restartButton.disabled = !isHost;
+      restartButton.textContent = isHost ? "Revanche starten" : "Warte auf Host";
+    } else {
+      restartButton.disabled = false;
+      restartButton.textContent = "Revanche";
+    }
+  }
 }
 
-function handleAttackCard(card) {
+function handleCardClick(cardId) {
+  const game = TableState.game;
+  if (!game || game.status !== "running") return;
+  const localId = TableState.localPlayerId;
+  if (!localId) return;
   try {
-    AppState.game.playAttackCard(AppState.localPlayerId, card.id);
-    afterGameInteraction();
+    if (game.currentAttacker.id === localId && ["attack-select", "attack-throw-in"].includes(game.phase)) {
+      game.playAttackCard(localId, cardId);
+    } else if (game.currentDefender.id === localId && game.phase === "defend-select") {
+      game.playDefenseCard(localId, cardId);
+    } else {
+      showToast("Jetzt ist ein anderer Spieler am Zug.");
+      return;
+    }
+    afterInteraction();
   } catch (error) {
     showToast(error.message);
   }
 }
 
-function handleDefenseCard(card) {
+function handleTakeCards() {
+  const game = TableState.game;
+  if (!game) return;
   try {
-    AppState.game.playDefenseCard(AppState.localPlayerId, card.id);
-    afterGameInteraction();
+    game.defenderTake(TableState.localPlayerId);
+    afterInteraction();
   } catch (error) {
     showToast(error.message);
   }
 }
 
-function afterGameInteraction() {
-  synchronizeGameState();
-  render();
-  queueAIMoveIfNeeded();
+function handleEndAttack() {
+  const game = TableState.game;
+  if (!game) return;
+  try {
+    game.endAttack(TableState.localPlayerId);
+    afterInteraction();
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
+function handleRestart() {
+  if (!TableState.game) return;
+  if (TableState.mode === "solo") {
+    TableState.game.startNewGame();
+    afterInteraction();
+  } else if (TableState.mode === "lobby") {
+    const lobby = loadLobby(TableState.lobbyCode);
+    if (!lobby) {
+      showToast("Lobby nicht mehr vorhanden.");
+      return;
+    }
+    if (lobby.hostId !== TableState.localPlayerId) {
+      showToast("Nur der Host kann eine neue Runde starten.");
+      return;
+    }
+    const game = new DurakGame({ players: lobby.players, mode: "lobby" });
+    game.startNewGame();
+    lobby.status = "playing";
+    lobby.gameState = game.toJSON();
+    saveLobby(lobby);
+    TableState.game = game;
+    TableState.lobby = lobby;
+    renderTable();
+  }
+}
+
+function handleTableStorageSync(event) {
+  if (TableState.mode !== "lobby" || !TableState.lobbyCode) return;
+  if (event.key !== getLobbyStorageKey(TableState.lobbyCode)) return;
+  const lobby = loadLobby(TableState.lobbyCode);
+  if (!lobby) {
+    showToast("Lobby wurde geschlossen.");
+    window.location.replace("setup.html?mode=multiplayer");
+    return;
+  }
+  if (!lobby.gameState) {
+    window.location.replace(`lobby.html?code=${TableState.lobbyCode}`);
+    return;
+  }
+  TableState.lobby = lobby;
+  TableState.game = DurakGame.fromState(lobby.gameState);
+  renderTable();
 }
 
 function queueAIMoveIfNeeded() {
-  const game = AppState.game;
+  if (TableState.mode !== "solo") return;
+  const game = TableState.game;
   if (!game || game.status !== "running") return;
-  const currentPlayer = game.currentAttacker;
-  if (game.phase === "defend-select") {
-    const defender = game.currentDefender;
-    if (defender.type === "ai") {
-      setTimeout(() => executeAIDefense(defender), 700);
-    }
+  clearTimeout(TableState.aiTimeout);
+  const defender = game.currentDefender;
+  if (game.phase === "defend-select" && defender.type === "ai") {
+    TableState.aiTimeout = setTimeout(() => executeAIDefense(defender), 700);
     return;
   }
-  if (["attack-select", "attack-throw-in"].includes(game.phase) && currentPlayer.type === "ai") {
-    setTimeout(() => executeAIAttack(currentPlayer), 700);
+  const attacker = game.currentAttacker;
+  if (["attack-select", "attack-throw-in"].includes(game.phase) && attacker.type === "ai") {
+    TableState.aiTimeout = setTimeout(() => executeAIAttack(attacker), 700);
   }
 }
 
 function executeAIAttack(aiPlayer) {
-  const game = AppState.game;
+  const game = TableState.game;
   if (!game || game.status !== "running") return;
   if (game.currentAttacker.id !== aiPlayer.id) return;
-
   const validCards = aiPlayer.hand.filter((card) => game.isCardValidForAttack(card));
   if (!validCards.length) {
     if (game.table.every((pair) => pair.defense)) {
       try {
         game.endAttack(aiPlayer.id);
+        afterInteraction();
       } catch (error) {
         console.error(error);
       }
-      afterGameInteraction();
     }
     return;
   }
-
-  const sorted = validCards.sort((a, b) => {
+  const sorted = [...validCards].sort((a, b) => {
     const aTrump = a.suit === game.trumpSuit;
     const bTrump = b.suit === game.trumpSuit;
     if (aTrump && !bTrump) return 1;
     if (!aTrump && bTrump) return -1;
     return a.value - b.value;
   });
-
-  const card = sorted[0];
   try {
-    game.playAttackCard(aiPlayer.id, card.id);
+    game.playAttackCard(aiPlayer.id, sorted[0].id);
+    afterInteraction();
   } catch (error) {
     console.error(error);
-    return;
   }
-  render();
-  synchronizeGameState();
-  queueAIMoveIfNeeded();
 }
 
 function executeAIDefense(aiPlayer) {
-  const game = AppState.game;
+  const game = TableState.game;
   if (!game || game.status !== "running") return;
   if (game.currentDefender.id !== aiPlayer.id) return;
-
   const lastPair = game.table[game.table.length - 1];
   if (!lastPair) return;
   const valid = game.getValidDefenseCards(lastPair.attack, aiPlayer);
   if (!valid.length) {
     try {
       game.defenderTake(aiPlayer.id);
+      afterInteraction();
     } catch (error) {
       console.error(error);
     }
-    afterGameInteraction();
     return;
   }
-
-  const sorted = valid.sort((a, b) => {
+  const sorted = [...valid].sort((a, b) => {
     const aTrump = a.suit === game.trumpSuit;
     const bTrump = b.suit === game.trumpSuit;
     if (aTrump && !bTrump) return 1;
     if (!aTrump && bTrump) return -1;
     return a.value - b.value;
   });
-
-  const card = sorted[0];
   try {
-    game.playDefenseCard(aiPlayer.id, card.id);
+    game.playDefenseCard(aiPlayer.id, sorted[0].id);
+    afterInteraction();
   } catch (error) {
     console.error(error);
-    return;
-  }
-  render();
-  synchronizeGameState();
-  queueAIMoveIfNeeded();
-}
-
-function synchronizeGameState() {
-  if (!AppState.lobby || !AppState.game) return;
-  const lobby = loadLobby(AppState.lobby.code);
-  if (!lobby) return;
-  lobby.status = AppState.game.status === "running" ? "playing" : "finished";
-  lobby.gameState = AppState.game.toJSON();
-  saveLobby(lobby);
-}
-
-function applyLobbyGameState(lobby) {
-  if (!lobby || !lobby.gameState) return;
-  AppState.game = DurakGame.fromState(lobby.gameState);
-  AppState.mode = "lobby";
-  AppState.view = "game";
-  render();
-  queueAIMoveIfNeeded();
-}
-
-function restoreSession() {
-  if (!AppState.lobby) return;
-  const storedId = sessionStorage.getItem(`durak_local_${AppState.lobby.code}`);
-  if (storedId) {
-    AppState.localPlayerId = storedId;
   }
 }
 
-function bootstrapFromSession() {
-  const sessionKeys = Object.keys(sessionStorage).filter((key) => key.startsWith("durak_local_"));
-  if (!sessionKeys.length) return;
-  const key = sessionKeys[0];
-  const code = key.replace("durak_local_", "");
-  const playerId = sessionStorage.getItem(key);
-  if (!playerId) return;
-  const lobby = loadLobby(code);
-  if (!lobby) {
-    sessionStorage.removeItem(key);
-    return;
-  }
-  AppState.lobby = lobby;
-  AppState.localPlayerId = playerId;
-  AppState.mode = "lobby";
-  if (lobby.status === "playing" && lobby.gameState) {
-    AppState.game = DurakGame.fromState(lobby.gameState);
-    AppState.view = "game";
-  } else {
-    AppState.view = "lobby";
+function formatTime(timestamp) {
+  if (!timestamp) return "";
+  try {
+    return new Date(timestamp).toLocaleTimeString("de-DE", {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  } catch (error) {
+    return "";
   }
 }
 
-window.addEventListener("storage", (event) => {
-  if (!event.key?.startsWith("durak_lobby_")) return;
-  const code = event.key.replace("durak_lobby_", "");
-  if (!AppState.lobby || AppState.lobby.code !== code) return;
-  const lobby = loadLobby(code);
-  if (!lobby) return;
-  AppState.lobby = lobby;
-  if (lobby.status === "playing" && lobby.gameState) {
-    applyLobbyGameState(lobby);
-  } else {
-    render();
-  }
-});
-
-function render() {
-  appElement.innerHTML = "";
-  let view;
-  switch (AppState.view) {
-    case "home":
-      view = createHomeView();
-      break;
-    case "solo-setup":
-      view = createSoloSetupView();
-      break;
-    case "multiplayer":
-      view = createMultiplayerView();
+document.addEventListener("DOMContentLoaded", () => {
+  const page = document.body.dataset.page;
+  switch (page) {
+    case "setup":
+      initSetupPage();
       break;
     case "lobby":
-      view = createLobbyView();
+      initLobbyPage();
       break;
-    case "game":
-      view = renderGameView();
+    case "table":
+      initTablePage();
       break;
     default:
-      view = createHomeView();
+      initHomePage();
+      break;
   }
-  appElement.appendChild(view);
-}
-
-bootstrapFromSession();
-render();
+});
