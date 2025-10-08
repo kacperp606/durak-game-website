@@ -466,30 +466,55 @@ function setView(view) {
 
 function createHomeView() {
   const container = document.createElement("div");
-  container.className = "section";
-  const header = document.createElement("header");
+  container.className = "home-screen";
+
+  const hero = document.createElement("div");
+  hero.className = "home-hero";
+
+  const eyebrow = document.createElement("span");
+  eyebrow.className = "hero-eyebrow";
+  eyebrow.textContent = "Durak Online";
+
   const title = document.createElement("h1");
-  title.textContent = "Durak Arena";
-  const badge = document.createElement("span");
-  badge.className = "badge";
-  badge.textContent = "Modernes Kartenerlebnis";
-  header.appendChild(title);
-  header.appendChild(badge);
+  title.textContent = "Eine gemütliche Runde Durak";
 
-  const subtitle = document.createElement("p");
-  subtitle.textContent = "Wähle deinen Modus: Spiele allein gegen die KI oder teile einen Lobby-Code mit Freunden für ein Duell.";
+  const intro = document.createElement("p");
+  intro.textContent =
+    "Wähle deinen Tisch: Trainiere allein gegen die KI oder lade Freunde in deine private Lobby ein.";
 
-  const actions = document.createElement("div");
-  actions.className = "home-actions";
+  const heroActions = document.createElement("div");
+  heroActions.className = "hero-actions";
 
-  const soloCard = document.createElement("div");
-  soloCard.className = "section";
+  const soloHeroButton = document.createElement("button");
+  soloHeroButton.textContent = "Solo starten";
+  soloHeroButton.addEventListener("click", () => {
+    setView("solo-setup");
+  });
+
+  const multiHeroButton = document.createElement("button");
+  multiHeroButton.className = "secondary";
+  multiHeroButton.textContent = "Mit Freunden spielen";
+  multiHeroButton.addEventListener("click", () => setView("multiplayer"));
+
+  heroActions.appendChild(soloHeroButton);
+  heroActions.appendChild(multiHeroButton);
+
+  hero.appendChild(eyebrow);
+  hero.appendChild(title);
+  hero.appendChild(intro);
+  hero.appendChild(heroActions);
+
+  const modeGrid = document.createElement("div");
+  modeGrid.className = "mode-grid";
+
+  const soloCard = document.createElement("article");
+  soloCard.className = "mode-card";
   const soloTitle = document.createElement("h2");
   soloTitle.textContent = "Solo spielen";
   const soloText = document.createElement("p");
-  soloText.textContent = "Fordere unsere adaptive KI heraus und trainiere deine Durak-Skills.";
+  soloText.textContent = "Fordere die Aurora-KI heraus und festige deine Taktiken in einer entspannten Atmosphäre.";
   const soloButton = document.createElement("button");
-  soloButton.textContent = "Solo starten";
+  soloButton.textContent = "Solo-Modus öffnen";
   soloButton.addEventListener("click", () => {
     setView("solo-setup");
   });
@@ -497,38 +522,38 @@ function createHomeView() {
   soloCard.appendChild(soloText);
   soloCard.appendChild(soloButton);
 
-  const multiCard = document.createElement("div");
-  multiCard.className = "section";
+  const multiCard = document.createElement("article");
+  multiCard.className = "mode-card";
   const multiTitle = document.createElement("h2");
-  multiTitle.textContent = "Mit Freunden";
+  multiTitle.textContent = "Gemeinsam spielen";
   const multiText = document.createElement("p");
-  multiText.textContent = "Erstelle eine Lobby, teile den Code und spielt gemeinsam – komplett im Browser.";
+  multiText.textContent = "Erstelle eine Lobby mit Code und teile den Tisch für eine klassische Durak-Partie.";
   const multiButton = document.createElement("button");
-  multiButton.textContent = "Lobby finden";
+  multiButton.textContent = "Lobby entdecken";
   multiButton.addEventListener("click", () => setView("multiplayer"));
   multiCard.appendChild(multiTitle);
   multiCard.appendChild(multiText);
   multiCard.appendChild(multiButton);
 
-  actions.appendChild(soloCard);
-  actions.appendChild(multiCard);
+  modeGrid.appendChild(soloCard);
+  modeGrid.appendChild(multiCard);
 
-  container.appendChild(header);
-  container.appendChild(subtitle);
-  container.appendChild(actions);
+  container.appendChild(hero);
+  container.appendChild(modeGrid);
   return container;
 }
 
 function createSoloSetupView() {
   const container = document.createElement("div");
-  container.className = "section";
+  container.className = "panel form-panel";
   const header = document.createElement("header");
+  header.className = "panel-header";
   const title = document.createElement("h1");
   title.textContent = "Solo-Modus";
   header.appendChild(title);
 
   const form = document.createElement("form");
-  form.className = "player-row";
+  form.className = "form-fields";
   const label = document.createElement("label");
   label.textContent = "Dein Spielername";
   const input = document.createElement("input");
@@ -537,7 +562,7 @@ function createSoloSetupView() {
   input.required = true;
 
   const controls = document.createElement("div");
-  controls.className = "controls";
+  controls.className = "form-actions";
   const backButton = document.createElement("button");
   backButton.type = "button";
   backButton.className = "secondary";
@@ -612,25 +637,24 @@ function saveLobby(lobby) {
 
 function createMultiplayerView() {
   const wrapper = document.createElement("div");
-  wrapper.className = "section";
+  wrapper.className = "panel lobby-panel";
   const header = document.createElement("header");
+  header.className = "panel-header";
   const title = document.createElement("h1");
   title.textContent = "Multiplayer Lobby";
   header.appendChild(title);
 
   const columns = document.createElement("div");
-  columns.style.display = "grid";
-  columns.style.gridTemplateColumns = "repeat(auto-fit, minmax(280px, 1fr))";
-  columns.style.gap = "18px";
+  columns.className = "lobby-columns";
 
   const createSection = document.createElement("div");
-  createSection.className = "section";
+  createSection.className = "lobby-card";
   const createTitle = document.createElement("h2");
   createTitle.textContent = "Neue Lobby";
   const createText = document.createElement("p");
   createText.textContent = "Erstelle einen Raum und teile den Code mit deinem Mitspieler.";
   const createForm = document.createElement("form");
-  createForm.className = "player-row";
+  createForm.className = "form-fields";
   const createLabel = document.createElement("label");
   createLabel.textContent = "Dein Name";
   const createInput = document.createElement("input");
@@ -671,13 +695,13 @@ function createMultiplayerView() {
   createSection.appendChild(createForm);
 
   const joinSection = document.createElement("div");
-  joinSection.className = "section";
+  joinSection.className = "lobby-card";
   const joinTitle = document.createElement("h2");
   joinTitle.textContent = "Lobby beitreten";
   const joinText = document.createElement("p");
   joinText.textContent = "Gib den Code ein, um die Lobby zu betreten.";
   const joinForm = document.createElement("form");
-  joinForm.className = "player-row";
+  joinForm.className = "form-fields";
 
   const codeLabel = document.createElement("label");
   codeLabel.textContent = "Code";
@@ -739,14 +763,17 @@ function createMultiplayerView() {
   columns.appendChild(createSection);
   columns.appendChild(joinSection);
 
+  const backActions = document.createElement("div");
+  backActions.className = "form-actions";
   const backButton = document.createElement("button");
   backButton.className = "secondary";
   backButton.textContent = "Zur Startseite";
   backButton.addEventListener("click", () => setView("home"));
 
+  backActions.appendChild(backButton);
   wrapper.appendChild(header);
   wrapper.appendChild(columns);
-  wrapper.appendChild(backButton);
+  wrapper.appendChild(backActions);
   return wrapper;
 }
 
@@ -758,9 +785,10 @@ function createLobbyView() {
   }
 
   const container = document.createElement("div");
-  container.className = "section";
+  container.className = "panel lobby-room";
 
   const header = document.createElement("header");
+  header.className = "panel-header";
   const title = document.createElement("h1");
   title.textContent = "Deine Lobby";
   header.appendChild(title);
@@ -770,7 +798,7 @@ function createLobbyView() {
   codeDisplay.textContent = lobby.code;
 
   const playerList = document.createElement("div");
-  playerList.className = "player-row";
+  playerList.className = "player-tags";
 
   lobby.players.forEach((player) => {
     const tag = document.createElement("div");
@@ -786,11 +814,15 @@ function createLobbyView() {
   });
 
   const info = document.createElement("p");
+  info.className = "lobby-info";
   info.textContent = lobby.players.length < 2
     ? "Warte auf einen weiteren Spieler..."
     : lobby.hostId === AppState.localPlayerId
       ? "Alle bereit. Du kannst das Spiel starten."
       : "Warte darauf, dass der Host das Spiel startet.";
+
+  const actions = document.createElement("div");
+  actions.className = "form-actions";
 
   container.appendChild(header);
   container.appendChild(codeDisplay);
@@ -817,7 +849,7 @@ function createLobbyView() {
       AppState.mode = "lobby";
       setView("game");
     });
-    container.appendChild(startButton);
+    actions.appendChild(startButton);
   }
 
   const leaveButton = document.createElement("button");
@@ -828,7 +860,8 @@ function createLobbyView() {
     setView("home");
   });
 
-  container.appendChild(leaveButton);
+  actions.appendChild(leaveButton);
+  container.appendChild(actions);
   return container;
 }
 
@@ -924,20 +957,23 @@ function renderTable(game, localPlayerId) {
 
 function renderPlayerSection(game, player, localPlayerId) {
   const wrapper = document.createElement("div");
-  wrapper.className = "section";
+  wrapper.className = "player-panel";
 
   const header = document.createElement("div");
   header.className = "player-header";
   const title = document.createElement("h3");
   title.textContent = player.name;
   const badge = document.createElement("span");
-  badge.className = "badge";
+  badge.className = "role-chip";
   if (player.id === game.currentAttacker.id) {
     badge.textContent = "Angriff";
+    badge.classList.add("role-attack");
   } else if (player.id === game.currentDefender.id) {
     badge.textContent = "Verteidigung";
+    badge.classList.add("role-defense");
   } else {
     badge.textContent = "Zuschauer";
+    badge.classList.add("role-idle");
   }
   header.appendChild(title);
   header.appendChild(badge);
@@ -984,7 +1020,7 @@ function renderPlayerSection(game, player, localPlayerId) {
 
   if (isLocal && isDefender && game.phase === "defend-select") {
     const controls = document.createElement("div");
-    controls.className = "controls";
+    controls.className = "turn-actions";
     const takeButton = document.createElement("button");
     takeButton.className = "secondary";
     takeButton.textContent = "Aufnehmen";
@@ -1002,7 +1038,7 @@ function renderPlayerSection(game, player, localPlayerId) {
 
   if (isLocal && isAttacker && game.phase === "attack-throw-in" && game.table.every((pair) => pair.defense)) {
     const controls = document.createElement("div");
-    controls.className = "controls";
+    controls.className = "turn-actions";
     const endButton = document.createElement("button");
     endButton.textContent = "Angriff beenden";
     endButton.addEventListener("click", () => {
@@ -1022,7 +1058,7 @@ function renderPlayerSection(game, player, localPlayerId) {
 
 function renderGameMeta(game) {
   const meta = document.createElement("div");
-  meta.className = "game-meta";
+  meta.className = "meta-strip";
 
   const trumpBlock = document.createElement("div");
   trumpBlock.className = "meta-block";
@@ -1030,9 +1066,7 @@ function renderGameMeta(game) {
   trumpTitle.className = "meta-title";
   trumpTitle.textContent = "Trumpf";
   const trumpValue = document.createElement("div");
-  trumpValue.style.display = "flex";
-  trumpValue.style.alignItems = "center";
-  trumpValue.style.gap = "12px";
+  trumpValue.className = "meta-value";
   if (game.trumpCard) {
     trumpValue.appendChild(createCardElement(game.trumpCard));
     const suitName = SUITS.find((suit) => suit.key === game.trumpCard.suit)?.label ?? "";
@@ -1049,6 +1083,7 @@ function renderGameMeta(game) {
   deckTitle.className = "meta-title";
   deckTitle.textContent = "Restkarten";
   const deckCount = document.createElement("span");
+  deckCount.className = "meta-value";
   deckCount.textContent = `${game.deck.length} Karten im Stapel`;
   deckBlock.appendChild(deckTitle);
   deckBlock.appendChild(deckCount);
@@ -1059,6 +1094,7 @@ function renderGameMeta(game) {
   discardTitle.className = "meta-title";
   discardTitle.textContent = "Ablage";
   const discardCount = document.createElement("span");
+  discardCount.className = "meta-value";
   discardCount.textContent = `${game.discard.length} Karten abgelegt`;
   discardBlock.appendChild(discardTitle);
   discardBlock.appendChild(discardCount);
@@ -1071,14 +1107,11 @@ function renderGameMeta(game) {
 
 function renderLogSection(game) {
   const section = document.createElement("div");
-  section.className = "section log-section";
+  section.className = "log-panel";
 
-  const header = document.createElement("div");
-  header.className = "player-header";
   const title = document.createElement("h3");
   title.textContent = "Spielverlauf";
-  header.appendChild(title);
-  section.appendChild(header);
+  section.appendChild(title);
 
   if (!game.log.length) {
     const empty = document.createElement("p");
@@ -1121,17 +1154,34 @@ function renderGameView() {
     return document.createElement("div");
   }
 
-  const container = document.createElement("div");
-  container.className = "section";
+  const layout = document.createElement("div");
+  layout.className = "game-layout";
 
-  const header = document.createElement("header");
+  const topBar = document.createElement("div");
+  topBar.className = "top-bar";
+
+  const titleGroup = document.createElement("div");
+  titleGroup.className = "top-bar-titles";
   const title = document.createElement("h1");
   title.textContent = "Durak";
-  header.appendChild(title);
+  titleGroup.appendChild(title);
+
+  const statusChip = document.createElement("span");
+  statusChip.className = `status-chip status-${game.status}`;
+  const statusText =
+    game.status === "running"
+      ? "Im Spiel"
+      : game.status === "finished"
+        ? "Runde beendet"
+        : game.status === "draw"
+          ? "Unentschieden"
+          : "Pause";
+  statusChip.textContent = statusText;
+  titleGroup.appendChild(statusChip);
 
   const backButton = document.createElement("button");
   backButton.className = "secondary";
-  backButton.textContent = "Beenden";
+  backButton.textContent = AppState.lobby ? "Zur Lobby" : "Verlassen";
   backButton.addEventListener("click", () => {
     if (AppState.lobby) {
       leaveLobby();
@@ -1140,24 +1190,63 @@ function renderGameView() {
     AppState.mode = "home";
     setView("home");
   });
-  header.appendChild(backButton);
+
+  topBar.appendChild(titleGroup);
+  topBar.appendChild(backButton);
+  layout.appendChild(topBar);
 
   const message = document.createElement("div");
-  message.className = "message";
+  message.className = "message-banner";
   message.textContent = game.message;
+  layout.appendChild(message);
 
-  container.appendChild(header);
-  container.appendChild(renderGameMeta(game));
-  container.appendChild(message);
-  container.appendChild(renderTable(game, AppState.localPlayerId));
+  layout.appendChild(renderGameMeta(game));
 
+  const boardRow = document.createElement("div");
+  boardRow.className = "board-row";
+
+  const tableColumn = document.createElement("div");
+  tableColumn.className = "table-column";
+  const tableSurface = document.createElement("div");
+  tableSurface.className = "table-surface";
+  tableSurface.appendChild(renderTable(game, AppState.localPlayerId));
+  tableColumn.appendChild(tableSurface);
+  boardRow.appendChild(tableColumn);
+
+  boardRow.appendChild(renderLogSection(game));
+
+  layout.appendChild(boardRow);
+
+  const playersSection = document.createElement("section");
+  playersSection.className = "players-section";
+  const playersHeading = document.createElement("div");
+  playersHeading.className = "players-heading";
+  const playersTitle = document.createElement("h2");
+  playersTitle.textContent = "Spielerübersicht";
+  playersHeading.appendChild(playersTitle);
+  playersSection.appendChild(playersHeading);
+
+  const playersGrid = document.createElement("div");
+  playersGrid.className = "players-grid";
   game.players.forEach((player) => {
-    container.appendChild(renderPlayerSection(game, player, AppState.localPlayerId));
+    playersGrid.appendChild(renderPlayerSection(game, player, AppState.localPlayerId));
   });
-
-  container.appendChild(renderLogSection(game));
+  playersSection.appendChild(playersGrid);
+  layout.appendChild(playersSection);
 
   if (game.status !== "running") {
+    const endPanel = document.createElement("div");
+    endPanel.className = "end-panel";
+
+    const endText = document.createElement("p");
+    endText.textContent =
+      game.status === "finished"
+        ? "Runde abgeschlossen – starte eine Revanche oder kehre zur Lobby zurück."
+        : game.status === "draw"
+          ? "Unentschieden! Mischt neu und versucht es direkt noch einmal."
+          : game.message;
+    endPanel.appendChild(endText);
+
     const restartButton = document.createElement("button");
     restartButton.textContent = "Neu starten";
     restartButton.addEventListener("click", () => {
@@ -1182,10 +1271,11 @@ function renderGameView() {
         render();
       }
     });
-    container.appendChild(restartButton);
+    endPanel.appendChild(restartButton);
+    layout.appendChild(endPanel);
   }
 
-  return container;
+  return layout;
 }
 
 let toastTimeout = null;
@@ -1198,12 +1288,12 @@ function showToast(text) {
     toast.style.bottom = "24px";
     toast.style.left = "50%";
     toast.style.transform = "translateX(-50%)";
-    toast.style.background = "rgba(15, 23, 42, 0.9)";
-    toast.style.color = "white";
+    toast.style.background = "rgba(36, 26, 18, 0.92)";
+    toast.style.color = "#f8f4ed";
     toast.style.padding = "12px 18px";
     toast.style.borderRadius = "12px";
-    toast.style.border = "1px solid rgba(255, 255, 255, 0.2)";
-    toast.style.boxShadow = "0 20px 40px rgba(0, 0, 0, 0.35)";
+    toast.style.border = "1px solid rgba(249, 178, 76, 0.35)";
+    toast.style.boxShadow = "0 20px 40px rgba(0, 0, 0, 0.45)";
     toast.style.fontSize = "14px";
     toast.style.zIndex = "100";
     document.body.appendChild(toast);
