@@ -10,6 +10,7 @@ Eine moderne, komplett clientseitige Umsetzung des Kartenspiels **Durak** – in
 - 🃏 Vollständige Spielmechanik für Durak (36er Kartendeck, Trumpf, Angriffs-/Verteidigungsphasen, Nachziehen, Siegbedingungen).
 - 💾 Automatisches Wiederherstellen einer laufenden Lobby beim erneuten Öffnen des Tabs.
 - 🎨 Cleanes, modernes Design mit Glas-Effekt und responsivem Layout.
+- 📜 Live-Spielverlauf mit Zeitstempeln, der Aktionen und Rundenergebnisse transparent macht.
 
 ## Projektstruktur
 

@@ -65,7 +65,8 @@ class DurakGame {
       message: "",
       mode: "solo",
       winnerId: null,
-      loserId: null
+      loserId: null,
+      log: []
     };
 
     Object.assign(this, defaults, options || {});
@@ -83,6 +84,21 @@ class DurakGame {
       defense: pair.defense ? { ...pair.defense } : null
     }));
     this.trumpCard = options?.trumpCard ? { ...options.trumpCard } : null;
+    this.log = (options?.log || []).map((entry) => ({ ...entry }));
+  }
+
+  addLogEntry(type, text, extra = {}) {
+    const entry = {
+      id: createId(),
+      type,
+      text,
+      timestamp: new Date().toISOString(),
+      ...extra
+    };
+    this.log.push(entry);
+    if (this.log.length > 80) {
+      this.log.splice(0, this.log.length - 80);
+    }
   }
 
   startNewGame() {
@@ -93,6 +109,7 @@ class DurakGame {
     this.winnerId = null;
     this.loserId = null;
     this.phase = "attack-select";
+    this.log = [];
 
     this.trumpCard = this.deck[this.deck.length - 1];
     const trumpSuit = this.trumpCard.suit;
@@ -122,6 +139,10 @@ class DurakGame {
       });
 
     this.attackerIndex = lowestTrump.value === Infinity ? 0 : lowestTrump.index;
+    const startingPlayer = this.players[this.attackerIndex];
+    this.addLogEntry("start", `Neue Runde gestartet. ${startingPlayer.name} greift zuerst an.`, {
+      actorId: startingPlayer.id
+    });
     this.updateMessage();
   }
 
@@ -146,7 +167,8 @@ class DurakGame {
       message: this.message,
       mode: this.mode,
       winnerId: this.winnerId,
-      loserId: this.loserId
+      loserId: this.loserId,
+      log: this.log.map((entry) => ({ ...entry }))
     };
   }
 
@@ -235,6 +257,14 @@ class DurakGame {
     }
     attacker.hand.splice(cardIndex, 1);
     this.table.push({ attack: card, defense: null });
+    this.addLogEntry(
+      "attack",
+      `${attacker.name} legt ${card.rank}${card.suitSymbol} auf den Tisch.`,
+      {
+        actorId: attacker.id,
+        card: { rank: card.rank, suit: card.suit, suitSymbol: card.suitSymbol }
+      }
+    );
     this.phase = "defend-select";
     this.updateMessage();
   }
@@ -260,6 +290,18 @@ class DurakGame {
     }
     defender.hand.splice(cardIndex, 1);
     lastPair.defense = defenseCard;
+    this.addLogEntry(
+      "defense",
+      `${defender.name} verteidigt mit ${defenseCard.rank}${defenseCard.suitSymbol}.`,
+      {
+        actorId: defender.id,
+        card: {
+          rank: defenseCard.rank,
+          suit: defenseCard.suit,
+          suitSymbol: defenseCard.suitSymbol
+        }
+      }
+    );
     if (this.canAddMoreAttacks() && this.currentAttacker.hand.some((card) => this.isCardValidForAttack(card))) {
       this.phase = "attack-throw-in";
     } else if (this.table.every((pair) => pair.defense)) {
@@ -279,6 +321,9 @@ class DurakGame {
       throw new Error("Nur der Verteidiger kann Karten aufnehmen.");
     }
     const defender = this.currentDefender;
+    const takenCards = this.table.reduce((sum, pair) => {
+      return sum + (pair.attack ? 1 : 0) + (pair.defense ? 1 : 0);
+    }, 0);
     this.table.forEach((pair) => {
       if (pair.attack) defender.hand.push(pair.attack);
       if (pair.defense) defender.hand.push(pair.defense);
@@ -286,6 +331,14 @@ class DurakGame {
     this.table = [];
     this.refillHands(this.attackerIndex);
     this.phase = "attack-select";
+    this.addLogEntry(
+      "take",
+      `${defender.name} nimmt ${takenCards} Karte${takenCards === 1 ? "" : "n"} auf.`,
+      {
+        actorId: defender.id,
+        count: takenCards
+      }
+    );
     this.updateMessage();
     this.checkForGameOver();
   }
@@ -301,6 +354,10 @@ class DurakGame {
     if (!this.table.every((pair) => pair.defense)) {
       throw new Error("Alle Karten müssen verteidigt sein.");
     }
+    const defender = this.currentDefender;
+    const clearedCards = this.table.reduce((sum, pair) => {
+      return sum + (pair.attack ? 1 : 0) + (pair.defense ? 1 : 0);
+    }, 0);
     this.table.forEach((pair) => {
       if (pair.attack) this.discard.push(pair.attack);
       if (pair.defense) this.discard.push(pair.defense);
@@ -309,6 +366,14 @@ class DurakGame {
     this.attackerIndex = this.defenderIndex;
     this.refillHands(this.attackerIndex);
     this.phase = "attack-select";
+    this.addLogEntry(
+      "round",
+      `${defender.name} verteidigt erfolgreich ${clearedCards} Karte${clearedCards === 1 ? "" : "n"} und greift nun an.`,
+      {
+        actorId: defender.id,
+        count: clearedCards
+      }
+    );
     this.updateMessage();
     this.checkForGameOver();
   }
@@ -349,6 +414,9 @@ class DurakGame {
   }
 
   checkForGameOver() {
+    if (this.status !== "running") {
+      return;
+    }
     const deckEmpty = this.deck.length === 0;
     const playersWithoutCards = this.players.filter((p) => p.hand.length === 0);
 
@@ -359,6 +427,7 @@ class DurakGame {
 
     if (playersWithoutCards.length === this.players.length) {
       this.status = "draw";
+      this.addLogEntry("draw", "Unentschieden – alle Spieler sind ihre Karten los.");
     } else if (playersWithoutCards.length === this.players.length - 1) {
       const winner = playersWithoutCards[0];
       const loser = this.players.find((p) => p.hand.length > 0);
@@ -366,6 +435,14 @@ class DurakGame {
         this.status = "finished";
         this.winnerId = winner.id;
         this.loserId = loser.id;
+        this.addLogEntry(
+          "finish",
+          `${winner.name} gewinnt die Runde. ${loser.name} bleibt als Durak zurück.`,
+          {
+            winnerId: winner.id,
+            loserId: loser.id
+          }
+        );
       }
     }
     this.updateMessage();
@@ -992,6 +1069,51 @@ function renderGameMeta(game) {
   return meta;
 }
 
+function renderLogSection(game) {
+  const section = document.createElement("div");
+  section.className = "section log-section";
+
+  const header = document.createElement("div");
+  header.className = "player-header";
+  const title = document.createElement("h3");
+  title.textContent = "Spielverlauf";
+  header.appendChild(title);
+  section.appendChild(header);
+
+  if (!game.log.length) {
+    const empty = document.createElement("p");
+    empty.className = "log-empty";
+    empty.textContent = "Noch keine Aktionen protokolliert.";
+    section.appendChild(empty);
+    return section;
+  }
+
+  const list = document.createElement("ul");
+  list.className = "log-list";
+  const entries = [...game.log].slice(-8).reverse();
+  entries.forEach((entry) => {
+    const item = document.createElement("li");
+    item.className = `log-entry log-entry-${entry.type}`;
+    const text = document.createElement("span");
+    text.textContent = entry.text;
+    const time = document.createElement("time");
+    time.dateTime = entry.timestamp;
+    try {
+      time.textContent = new Date(entry.timestamp).toLocaleTimeString("de-DE", {
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    } catch (error) {
+      time.textContent = "";
+    }
+    item.appendChild(text);
+    item.appendChild(time);
+    list.appendChild(item);
+  });
+  section.appendChild(list);
+  return section;
+}
+
 function renderGameView() {
   const game = AppState.game;
   if (!game) {
@@ -1032,6 +1154,8 @@ function renderGameView() {
   game.players.forEach((player) => {
     container.appendChild(renderPlayerSection(game, player, AppState.localPlayerId));
   });
+
+  container.appendChild(renderLogSection(game));
 
   if (game.status !== "running") {
     const restartButton = document.createElement("button");
