@@ -1,0 +1,279 @@
+:root {
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.4;
+  font-weight: 400;
+  color: #f5f8ff;
+  background: radial-gradient(circle at top right, #2e2a72, #14162e 50%, #0b0e1d);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+.app-shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+}
+
+.site-header {
+  padding: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.site-header h1 {
+  margin: 4px 0;
+}
+
+.subtitle {
+  margin: 0;
+  color: #cfd5ff;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #8ea1ff;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.nav-tabs {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.tab {
+  color: #d9ddff;
+  text-decoration: none;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 10px 14px;
+  transition: all 160ms ease;
+}
+
+.tab:hover,
+.tab.active {
+  border-color: rgba(139, 151, 255, 0.7);
+  background: rgba(139, 151, 255, 0.16);
+}
+
+.page-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.hero {
+  padding: 28px;
+}
+
+.hero h2 {
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+  margin-top: 8px;
+}
+
+.hero p {
+  color: #d8dcff;
+  max-width: 60ch;
+}
+
+.cta-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 10px 14px;
+}
+
+.primary {
+  background: linear-gradient(90deg, #7f8cff, #5ed0ff);
+  color: #0f1330;
+}
+
+.secondary {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #eff1ff;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+}
+
+.stat-card {
+  padding: 16px;
+}
+
+.stat-card span {
+  color: #b8c2ff;
+  font-size: 0.9rem;
+}
+
+.stat-card strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 1.6rem;
+}
+
+.stack {
+  display: grid;
+  gap: 16px;
+}
+
+.section-header h2,
+.section-header p {
+  margin: 0;
+}
+
+.section-header p {
+  color: #c8ceff;
+}
+
+.filter-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-filter {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #eef0ff;
+  border-radius: 999px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.btn-filter.active {
+  border-color: #7a89ff;
+  background: rgba(122, 137, 255, 0.24);
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.game-card {
+  padding: 18px;
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+}
+
+.chip {
+  padding: 4px 8px;
+  background: rgba(94, 208, 255, 0.2);
+  border-radius: 999px;
+  font-size: 0.75rem;
+}
+
+.status {
+  font-size: 0.8rem;
+  color: #cfd5ff;
+}
+
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.88rem;
+  color: #d2d9ff;
+  margin-bottom: 8px;
+}
+
+.progress-track {
+  width: 100%;
+  height: 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #7f8cff, #5ed0ff);
+}
+
+.timeline {
+  padding: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.timeline-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 12px;
+}
+
+.timeline-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.timeline-row h3,
+.timeline-row p {
+  margin: 0;
+}
+
+.timeline-row p {
+  color: #bfc7ff;
+}
+
+.progress-inline {
+  min-width: min(320px, 100%);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    padding: 16px;
+  }
+
+  .site-header {
+    padding: 18px;
+  }
+
+  .timeline-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .progress-inline {
+    width: 100%;
+    min-width: unset;
+  }
+}
