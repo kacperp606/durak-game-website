@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#081d19" />
+    <meta name="description" content="Durak mit bis zu vier Freunden direkt im Browser spielen." />
+    <title>DURAK — Spielabend</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="Durak Startseite">
+          <span class="brand-mark">D</span>
+          <span>DURAK</span>
+        </a>
+        <nav aria-label="Hauptnavigation">
+          <button class="nav-link active" data-view="lobby">LOBBY</button>
+          <button class="nav-link" id="rulesBtn">REGELN</button>
+        </nav>
+        <div class="room-id"><span></span> RAUM #K7M2</div>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div class="eyebrow"><span>●</span> PRIVATER SPIELTISCH</div>
+          <h1>WER BLEIBT AUF<br><em>DEN KARTEN SITZEN?</em></h1>
+          <p>Der Klassiker für vier. Keine Anmeldung, kein Download — nur ihr, 36 Karten und eine Person, die am Ende Durak ist.</p>
+        </section>
+
+        <section class="table-card" aria-labelledby="tableTitle">
+          <div class="table-header">
+            <div>
+              <span class="section-kicker">DEIN SPIELTISCH</span>
+              <h2 id="tableTitle">4 SPIELER · 36 KARTEN</h2>
+            </div>
+            <div class="status"><i></i> WARTET AUF SPIELER</div>
+          </div>
+
+          <div class="seats">
+            <article class="seat occupied host">
+              <div class="avatar avatar-one">F</div>
+              <div class="player-info"><strong>Felix</strong><span>DU · HOST</span></div>
+              <div class="ready-check">✓</div>
+            </article>
+            <article class="seat occupied">
+              <div class="avatar avatar-two">M</div>
+              <div class="player-info"><strong>Mara</strong><span>BEREIT</span></div>
+              <div class="ready-check">✓</div>
+            </article>
+            <article class="seat empty" data-seat>
+              <div class="avatar empty-avatar">+</div>
+              <div class="player-info"><strong>Freier Platz</strong><span>EINLADEN</span></div>
+              <button class="mini-copy" aria-label="Einladungslink kopieren">↗</button>
+            </article>
+            <article class="seat empty" data-seat>
+              <div class="avatar empty-avatar">+</div>
+              <div class="player-info"><strong>Freier Platz</strong><span>EINLADEN</span></div>
+              <button class="mini-copy" aria-label="Einladungslink kopieren">↗</button>
+            </article>
+          </div>
+
+          <div class="invite-row">
+            <div class="invite-label"><span>🔗</span><div><small>DEIN EINLADUNGSLINK</small><strong id="inviteUrl">durak.game/join/K7M2</strong></div></div>
+            <button class="copy-btn" id="copyBtn"><span>⧉</span> LINK KOPIEREN</button>
+          </div>
+
+          <div class="action-row">
+            <p><span>!</span> Du kannst starten, sobald alle vier Plätze belegt sind.</p>
+            <button class="ready-btn" id="readyBtn">ICH BIN BEREIT <span>→</span></button>
+          </div>
+        </section>
+
+        <section class="features" aria-label="Spielvorteile">
+          <article><span class="feature-icon">♠</span><div><h3>ECHTES DURAK</h3><p>Klassische Regeln, 36 Karten und Trumpf. So, wie ihr es kennt.</p></div></article>
+          <article><span class="feature-icon">◎</span><div><h3>SOFORT ZUSAMMEN</h3><p>Link teilen und losspielen. Ohne Konto und ohne Installation.</p></div></article>
+          <article><span class="feature-icon">⚡</span><div><h3>LIVE & DIREKT</h3><p>Alle Züge in Echtzeit. Optimiert für Handy, Tablet und Desktop.</p></div></article>
+        </section>
+      </main>
+
+      <footer><span>© 2026 DURAK</span><span>GEMACHT FÜR LANGE ABENDE</span><span>DE · <button>DATENSCHUTZ</button></span></footer>
+    </div>
+
+    <dialog id="rulesDialog">
+      <button class="close-modal" aria-label="Schließen">×</button>
+      <span class="section-kicker">KURZ ERKLÄRT</span>
+      <h2>SO SPIELT IHR DURAK</h2>
+      <ol>
+        <li><b>Karten verteilen</b><span>Jede Person erhält sechs Karten. Die nächste offene Karte bestimmt den Trumpf.</span></li>
+        <li><b>Angreifen & abwehren</b><span>Übertrumpfe Angriffskarten mit einer höheren Karte derselben Farbe oder mit Trumpf.</span></li>
+        <li><b>Nicht Durak werden</b><span>Wer zuerst alle Karten loswird, ist sicher. Die letzte Person mit Karten verliert.</span></li>
+      </ol>
+    </dialog>
+    <div class="toast" id="toast" role="status">Link kopiert — schick ihn an deine Freunde!</div>
+    <script src="/src/main.js"></script>
+  </body>
+</html>
